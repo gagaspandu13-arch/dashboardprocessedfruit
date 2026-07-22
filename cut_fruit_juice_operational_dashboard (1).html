@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cut Fruit & Juice Operational Dashboard</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script>
+        window.tailwind = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- External Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        .sidebar-active {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            font-weight: 800;
+            border-right: 4px solid #10b981;
+        }
+        .dark .sidebar-active {
+            background-color: rgba(16, 185, 129, 0.25);
+            color: #34d399;
+        }
+
+        .bottom-nav-active {
+            color: #10b981;
+            font-weight: 800;
+        }
+        .dark .bottom-nav-active {
+            color: #34d399;
+        }
+
+        .kpi-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 1rem;
+            padding: 1rem;
+        }
+        @media (min-width: 640px) {
+            .kpi-card { padding: 1.25rem; }
+        }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.08);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 320px;
+        }
+        @media (min-width: 640px) {
+            .chart-container { height: 360px; }
+        }
+        .data-table-container {
+            max-height: 520px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+        
+        @media print {
+            aside, header, nav, .no-print { display: none !important; }
+            main { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+            .data-table-container { max-height: none !important; overflow: visible !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen pb-20 lg:pb-0 transition-colors duration-200">
+
+<div id="loading-overlay" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex flex-col items-center justify-center text-white px-4 text-center hidden">
+    <div class="w-12 h-12 sm:w-14 sm:h-14 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p class="font-extrabold text-sm sm:text-base tracking-wide">Menghubungkan ke Apps Script API...</p>
+    <p class="text-xs text-slate-300 mt-1 max-w-xs" id="loading-subtext">Mengambil data realtime dari Google Sheets</p>
+</div>
+
+<!-- Mobile Sidebar Drawer Backdrop -->
+<div id="mobile-drawer-backdrop" onclick="closeMobileDrawer()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 hidden lg:hidden transition-opacity"></div>
+
+<div class="min-h-screen flex flex-col lg:flex-row">
+
+    <!-- Sidebar Navigation (Desktop & Mobile Drawer) -->
+    <aside id="sidebar-drawer" class="fixed lg:sticky top-0 left-0 h-screen w-72 lg:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-shrink-0 flex flex-col justify-between p-4 z-50 shadow-2xl lg:shadow-none -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+        <div>
+            <!-- Brand Logo Header -->
+            <div class="flex items-center justify-between px-1 py-2 mb-5 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-amber-400 flex items-center justify-center text-white font-black text-lg shadow-md shadow-emerald-500/20">
+                        🍉
+                    </div>
+                    <div>
+                        <h1 class="font-black text-xs text-slate-900 dark:text-white tracking-tight uppercase leading-tight">CUT FRUIT & JUICE</h1>
+                        <p class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">MONITORING SYSTEM</p>
+                    </div>
+                </div>
+                <button onclick="closeMobileDrawer()" class="lg:hidden text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg text-lg">✕</button>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="space-y-1.5 no-print">
+                <button id="nav-sales" onclick="switchView('sales')" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-left sidebar-active">
+                    <span class="text-lg">📊</span>
+                    <span>Sales Performance</span>
+                </button>
+
+                <button id="nav-waste" onclick="switchView('waste')" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-left">
+                    <span class="text-lg">🗑️</span>
+                    <span>Waste & Pemusnahan</span>
+                </button>
+
+                <button id="nav-repack" onclick="switchView('repack')" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-left">
+                    <span class="text-lg">🔄</span>
+                    <span>Repacking & Audit Toko</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer Controls -->
+        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3 no-print">
+            <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/50">
+                <div class="flex items-center justify-between text-[11px] mb-1">
+                    <span class="font-semibold text-slate-500 dark:text-slate-400">Status Sheet:</span>
+                    <span id="sync-dot" class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+                </div>
+                <div id="sync-status" class="text-[10px] font-bold text-slate-600 dark:text-slate-300 truncate">Menghubungkan...</div>
+                <div id="last-update-time" class="text-[9px] text-emerald-600 dark:text-emerald-400 font-extrabold mt-0.5 truncate"></div>
+                <div class="grid grid-cols-2 gap-1.5 mt-2.5">
+                    <button onclick="fetchData(false)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] py-2 px-2 rounded-lg shadow-sm transition-all flex items-center justify-center gap-1 active:scale-95">
+                        <span>🔄</span> Sync API
+                    </button>
+                    <button onclick="fetchData(true)" title="Paksa Rebuild Cache di Sheet" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-[11px] py-2 px-2 rounded-lg shadow-sm transition-all flex items-center justify-center gap-1 active:scale-95">
+                        <span>⚡</span> Rebuild
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                <button onclick="toggleDarkMode()" class="flex-1 flex items-center justify-between px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs transition-all hover:bg-slate-200 dark:hover:bg-slate-700">
+                    <span class="flex items-center gap-1.5">
+                        <span id="theme-icon">🌙</span>
+                        <span id="theme-label">Mode Gelap</span>
+                    </span>
+                </button>
+                <button onclick="openGasModal()" title="Lihat Kode Backend GAS v2.2" class="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700">
+                    ⚙️ Script
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col min-h-screen min-w-0">
+        <!-- Responsive Header Bar -->
+        <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3 sm:px-6 py-2.5 no-print">
+            <div class="max-w-7xl mx-auto flex flex-col gap-2.5">
+                
+                <!-- Top Row Header: Mobile Brand & Global Actions -->
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 lg:hidden">
+                        <button onclick="openMobileDrawer()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-base">
+                            ☰
+                        </button>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-lg">🍉</span>
+                            <span class="font-black text-xs text-slate-900 dark:text-white uppercase tracking-tight">Cut Fruit</span>
+                        </div>
+                    </div>
+
+                    <div class="hidden lg:block">
+                        <h2 id="view-title-desktop" class="font-black text-sm text-slate-800 dark:text-white uppercase tracking-wider">Sales Performance</h2>
+                    </div>
+
+                    <!-- Quick Action Buttons -->
+                    <div class="flex items-center gap-1.5 sm:gap-2 ml-auto">
+                        <!-- AC Presence Button -->
+                        <button onclick="openAcStatusModal()" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold px-2.5 sm:px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm shadow-indigo-500/20">
+                            <span>👁️</span>
+                            <span class="hidden sm:inline">Absensi AC</span>
+                            <span id="badge-ac-count" class="bg-indigo-900/60 text-indigo-100 text-[10px] px-1.5 py-0.5 rounded-full font-black">0/0</span>
+                        </button>
+
+                        <button onclick="exportToExcel()" title="Export Excel" class="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/80 hover:bg-emerald-100 dark:hover:bg-emerald-900 font-bold px-2.5 sm:px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 transition-all">
+                            <span>📥</span>
+                            <span class="hidden md:inline">Export</span>
+                        </button>
+                        
+                        <button onclick="fetchData()" title="Refreshed Data" class="lg:hidden bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 p-1.5 rounded-xl text-xs font-bold">
+                            🔄
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Controls Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Area Manager</label>
+                        <select id="sel-am" onchange="onAmChange()" class="w-full bg-slate-100 dark:bg-slate-800 border-0 text-slate-800 dark:text-slate-200 text-xs font-semibold rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-emerald-500 outline-none truncate">
+                            <option value="ALL">Semua AM</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Area Coordinator</label>
+                        <select id="sel-ac" onchange="onAcChange()" class="w-full bg-slate-100 dark:bg-slate-800 border-0 text-slate-800 dark:text-slate-200 text-xs font-semibold rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-emerald-500 outline-none truncate">
+                            <option value="ALL">Semua AC</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Toko</label>
+                        <select id="sel-store" onchange="handleFilterChange()" class="w-full bg-slate-100 dark:bg-slate-800 border-0 text-slate-800 dark:text-slate-200 text-xs font-semibold rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-emerald-500 outline-none truncate">
+                            <option value="ALL">Semua Toko</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Pencarian PLU / Store</label>
+                        <input type="text" id="inp-search" oninput="handleFilterChange()" placeholder="Ketik PLU / Nama..." class="w-full bg-slate-100 dark:bg-slate-800 border-0 text-slate-800 dark:text-slate-200 text-xs font-semibold rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                </div>
+
+            </div>
+        </header>
+
+        <!-- Dynamic Content Display Area -->
+        <main id="content-area" class="flex-1 p-3 sm:p-6 max-w-7xl mx-auto w-full">
+            <div class="flex flex-col items-center justify-center py-24 text-center px-4">
+                <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 rounded-3xl flex items-center justify-center text-3xl mb-4 shadow-lg shadow-emerald-500/10 animate-bounce">
+                    🍉
+                </div>
+                <h2 class="text-xl font-black text-slate-800 dark:text-white tracking-tight">System Ready</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs">
+                    Mengambil data terbaru dari Apps Script...
+                </p>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Mobile Bottom Navigation Bar -->
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 px-2 py-1.5 shadow-lg flex items-center justify-around no-print">
+    <button id="bnav-sales" onclick="switchView('sales')" class="flex flex-col items-center py-1 px-3 rounded-xl transition-all bottom-nav-active">
+        <span class="text-lg leading-none">📊</span>
+        <span class="text-[10px] mt-1">Sales</span>
+    </button>
+    <button id="bnav-waste" onclick="switchView('waste')" class="flex flex-col items-center py-1 px-3 rounded-xl transition-all text-slate-400">
+        <span class="text-lg leading-none">🗑️</span>
+        <span class="text-[10px] mt-1">Waste</span>
+    </button>
+    <button id="bnav-repack" onclick="switchView('repack')" class="flex flex-col items-center py-1 px-3 rounded-xl transition-all text-slate-400">
+        <span class="text-lg leading-none">🔄</span>
+        <span class="text-[10px] mt-1">Repack</span>
+    </button>
+    <button onclick="openAcStatusModal()" class="flex flex-col items-center py-1 px-3 rounded-xl transition-all text-indigo-500 font-bold">
+        <span class="text-lg leading-none">👁️</span>
+        <span class="text-[10px] mt-1">Absensi</span>
+    </button>
+</nav>
+
+<!-- AC Attendance Modal (Fully Rebuilt) -->
+<div id="modal-ac-status" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/50">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">👁️</span>
+                <div>
+                    <h3 class="font-black text-sm text-slate-800 dark:text-white">Absensi Area Coordinator (AC)</h3>
+                    <p class="text-[10px] text-slate-400">Status Kehadiran & Monitoring Kunjungan Hari Ini</p>
+                </div>
+            </div>
+            <button onclick="closeAcStatusModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg text-lg">✕</button>
+        </div>
+
+        <div class="p-3 bg-indigo-50 dark:bg-indigo-950/40 border-b border-indigo-100 dark:border-indigo-900/50 flex items-center justify-between">
+            <div class="flex items-center gap-2 text-xs font-bold">
+                <span id="stat-ac-seen" class="text-emerald-600 dark:text-emerald-400">🟢 0 Hadir</span>
+                <span id="stat-ac-unseen" class="text-rose-600 dark:text-rose-400">🔴 0 Belum</span>
+            </div>
+            <button onclick="checkInCurrentAc()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs px-3 py-1.5 rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-1">
+                <span>📍</span> Check-In Saya
+            </button>
+        </div>
+
+        <div id="ac-status-list" class="p-4 overflow-y-auto space-y-2 grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1">
+            <!-- Dynamic AC list rendered via JS -->
+        </div>
+
+        <div class="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between">
+            <span class="text-[10px] text-slate-400">Ter-sync ke Sheet: <b>ABSENSI AC</b></span>
+            <button onclick="closeAcStatusModal()" class="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs px-4 py-2 rounded-xl">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- GAS Backend Code Modal -->
+<div id="modal-gas-code" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">⚙️</span>
+                <div>
+                    <h3 class="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-white">Google Apps Script Backend (v2.2 - Auto Sheet ABSENSI)</h3>
+                    <p class="text-[10px] text-slate-400">Salin kode ini ke Apps Script Editor Google Sheet Anda</p>
+                </div>
+            </div>
+            <button onclick="closeGasModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg text-lg">✕</button>
+        </div>
+        <div class="p-3 bg-slate-900 text-slate-200 font-mono text-[11px] overflow-y-auto flex-1 select-all">
+            <pre id="gas-script-content">
+/**
+ * Cut Fruit & Juice Operational Dashboard - Google Apps Script Backend (v2.2)
+ * Includes Automatic Logging to "ABSENSI AC" Sheet
+ */
+const SS_CONFIG = {
+    SHEET_PROCESSED_NAMES: ["PROCESSED FRUIT", "PROCESSED", "CUT FRUIT", "JUICE"],
+    SHEET_RAW_NAMES: ["RAW", "RAW FRUIT", "BAHAN MENTAH", "RAW MATERIAL"],
+    SHEET_MAPPING_NAMES: ["MAPPING PLU", "MAPPING", "MAP PLU", "PLU MAPPING"],
+    SHEET_ABSENSI_AC: "ABSENSI AC",
+    SHEET_CACHE: "_SUMMARY_CACHE_",
+    CHUNK_SIZE: 35000
+};
+
+function doGet(e) {
+    try {
+        const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+        // Handle AC Attendance Logging via GET or POST
+        if (e && e.parameter && e.parameter.action === "absen_ac") {
+            return recordAcAttendance(e.parameter.acName);
+        }
+
+        let cacheSheet = ss.getSheetByName(SS_CONFIG.SHEET_CACHE);
+        const forceRefresh = e && e.parameter && (e.parameter.refresh === "true" || e.parameter.force === "1");
+
+        if (forceRefresh || !cacheSheet || cacheSheet.getLastRow() < 2) {
+            buildDashboardCache();
+            cacheSheet = ss.getSheetByName(SS_CONFIG.SHEET_CACHE);
+        }
+
+        const lastRow = cacheSheet ? cacheSheet.getLastRow() : 0;
+        let rawData = "";
+        if (lastRow >= 2) {
+            rawData = cacheSheet.getRange(2, 1, lastRow - 1, 1).getValues().map(r => r[0]).join('');
+        }
+
+        if (!rawData) {
+            buildDashboardCache();
+            cacheSheet = ss.getSheetByName(SS_CONFIG.SHEET_CACHE);
+            const retryLastRow = cacheSheet ? cacheSheet.getLastRow() : 0;
+            if (retryLastRow >= 2) {
+                rawData = cacheSheet.getRange(2, 1, retryLastRow - 1, 1).getValues().map(r => r[0]).join('');
+            }
+        }
+
+        return ContentService.createTextOutput(rawData)
+            .setMimeType(ContentService.MimeType.JSON);
+    } catch (err) {
+        return ContentService.createTextOutput(JSON.stringify({
+            status: "error", message: err.toString(), stack: err.stack
+        })).setMimeType(ContentService.MimeType.JSON);
+    }
+}
+
+function doPost(e) {
+    try {
+        let postData = {};
+        if (e && e.postData && e.postData.contents) {
+            try { postData = JSON.parse(e.postData.contents); } catch(ex){}
+        }
+        const action = postData.action || (e && e.parameter ? e.parameter.action : "");
+        const acName = postData.acName || (e && e.parameter ? e.parameter.acName : "");
+
+        if (action === "absen_ac") {
+            return recordAcAttendance(acName);
+        }
+        return doGet(e);
+    } catch (err) {
+        return ContentService.createTextOutput(JSON.stringify({
+            status: "error", message: err.toString()
+        })).setMimeType(ContentService.MimeType.JSON);
+    }
+}
+
+function recordAcAttendance(acName) {
+    if (!acName) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "acName is required" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(SS_CONFIG.SHEET_ABSENSI_AC);
+    
+    if (!sheet) {
+        sheet = ss.insertSheet(SS_CONFIG.SHEET_ABSENSI_AC);
+        sheet.appendRow(["WAKTU & TANGGAL", "NAMA AC"]);
+        sheet.getRange(1, 1, 1, 2).setFontWeight("bold").setBackground("#d1fae5");
+    }
+
+    const timeStr = Utilities.formatDate(new Date(), "Asia/Jakarta", "yyyy-MM-dd HH:mm:ss");
+    sheet.appendRow([timeStr, acName]);
+
+    return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        message: "Absensi AC berhasil dicatat ke sheet ABSENSI AC",
+        timestamp: timeStr,
+        acName: acName
+    })).setMimeType(ContentService.MimeType.JSON);
+}
+            </pre>
+        </div>
+        <div class="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex items-center justify-between">
+            <span class="text-[10px] text-slate-400">v2.2 Backend Protocol (Auto Auto-Append ABSENSI AC)</span>
+            <div class="flex items-center gap-2">
+                <button onclick="copyGasScript()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-sm transition-all">📋 Salin Script</button>
+                <button onclick="closeGasModal()" class="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs px-4 py-2 rounded-xl">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Global Window Helpers to prevent scope execution issues
+    window.openGasModal = function() {
+        document.getElementById('modal-gas-code').classList.remove('hidden');
+    };
+    window.closeGasModal = function() {
+        document.getElementById('modal-gas-code').classList.add('hidden');
+    };
+    window.copyGasScript = function() {
+        const text = document.getElementById('gas-script-content').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            Swal.fire({ icon: 'success', title: 'Kode Disalin!', text: 'Kode GAS v2.2 berhasil disalin ke clipboard.', timer: 2000, showConfirmButton: false });
+        });
+    };
+
+    window.openMobileDrawer = function() {
+        const backdrop = document.getElementById('mobile-drawer-backdrop');
+        const drawer = document.getElementById('sidebar-drawer');
+        if (backdrop) backdrop.classList.remove('hidden');
+        if (drawer) drawer.classList.remove('-translate-x-full');
+    };
+
+    window.closeMobileDrawer = function() {
+        const backdrop = document.getElementById('mobile-drawer-backdrop');
+        const drawer = document.getElementById('sidebar-drawer');
+        if (backdrop) backdrop.classList.add('hidden');
+        if (drawer) drawer.classList.add('-translate-x-full');
+    };
+</script>
+
+<script type="module">
+
+const CONFIG = {
+    DEFAULT_API_URL: "https://script.google.com/macros/s/AKfycbzdBIgS4S2AbiNy_OYLllzN5ur5JxtzjdXG9iZhtKI_3h6oVnqcITC9JS8FNR6Z-PAi/exec",
+    PAGES: ['sales', 'waste', 'repack']
+};
+
+const APP_STATE = {
+    activeView: 'sales',
+    isDarkMode: false,
+    apiUrl: localStorage.getItem('GAS_API_URL') || CONFIG.DEFAULT_API_URL,
+    raw: { processed: [], raw_fruit: [], mapping: [] },
+    filtered: { processed: [], raw_fruit: [] },
+    filters: { am: 'ALL', ac: 'ALL', store: 'ALL', search: '' },
+    sort: { key: 'RP_SALES', dir: 'desc' },
+    pagination: { page: 1, wastePage: 1, repackPage: 1, limit: 25 },
+    chartInstances: {},
+    acViewLogs: {},
+    lastUpdatedTimestamp: null,
+    db: null,
+    auth: null,
+    appId: typeof __app_id !== 'undefined' ? __app_id : 'cut-fruit-operational-dashboard'
+};
+
+async function initCloudSync() {
+    try {
+        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+            const { initializeApp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
+            const { getAuth, signInAnonymously, signInWithCustomToken } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+            const { getFirestore, doc, setDoc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+
+            const firebaseConfig = JSON.parse(__firebase_config);
+            const app = initializeApp(firebaseConfig);
+            APP_STATE.auth = getAuth(app);
+            APP_STATE.db = getFirestore(app);
+
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(APP_STATE.auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(APP_STATE.auth);
+            }
+
+            const todayKey = getTodayKey();
+            const attendanceDocRef = doc(APP_STATE.db, 'artifacts', APP_STATE.appId, 'public', 'data', 'ac_attendance', todayKey);
+
+            onSnapshot(attendanceDocRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    APP_STATE.acViewLogs = snapshot.data().logs || {};
+                } else {
+                    APP_STATE.acViewLogs = {};
+                }
+                updateAcHeaderBadge();
+                const acModal = document.getElementById('modal-ac-status');
+                if (acModal && !acModal.classList.contains('hidden')) {
+                    renderAcStatusList();
+                }
+            }, (error) => {
+                console.warn("Firestore listener fallback to local mode:", error);
+            });
+        }
+    } catch (err) {
+        console.warn("Cloud Sync initialization skipped:", err);
+    }
+}
+
+function getTodayKey() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Point 5: Record AC Attendance and Sync to Google Sheet ABSENSI AC
+async function recordAcView(acName) {
+    if (!acName || acName === 'ALL') return;
+    const today = getTodayKey();
+    const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    
+    APP_STATE.acViewLogs[acName] = timeStr;
+    updateAcHeaderBadge();
+
+    // 1. Send to Google Apps Script Endpoint (Sheet: "ABSENSI AC")
+    try {
+        const sendUrl = `${APP_STATE.apiUrl}${APP_STATE.apiUrl.includes('?') ? '&' : '?'}action=absen_ac&acName=${encodeURIComponent(acName)}`;
+        fetch(sendUrl, { method: 'GET', mode: 'no-cors' }).catch(err => console.log("GAS Absen trigger dispatched:", err));
+    } catch (e) {
+        console.warn("GAS Attendance dispatch error:", e);
+    }
+
+    // 2. Sync to Firestore Realtime DB for immediate UI updates across devices
+    if (APP_STATE.db && APP_STATE.auth?.currentUser) {
+        try {
+            const attendanceDocRef = doc(APP_STATE.db, 'artifacts', APP_STATE.appId, 'public', 'data', 'ac_attendance', today);
+            await setDoc(attendanceDocRef, {
+                logs: APP_STATE.acViewLogs,
+                lastUpdated: new Date().toISOString()
+            }, { merge: true });
+        } catch (e) {
+            console.error("Failed to sync AC attendance to cloud:", e);
+        }
+    }
+}
+
+function getAllAcList() {
+    const combined = (APP_STATE.raw.processed || []).concat(APP_STATE.raw.raw_fruit || []);
+    const acSet = new Set();
+    combined.forEach(item => {
+        if (item.AC && item.AC.trim() !== '') acSet.add(item.AC.trim());
+    });
+    return Array.from(acSet).sort();
+}
+
+function updateAcHeaderBadge() {
+    const allAcs = getAllAcList();
+    let seenCount = 0;
+    allAcs.forEach(ac => {
+        if (APP_STATE.acViewLogs[ac]) seenCount++;
+    });
+
+    const badge = document.getElementById('badge-ac-count');
+    if (badge) {
+        badge.innerText = `${seenCount}/${allAcs.length}`;
+    }
+}
+
+window.checkInCurrentAc = function() {
+    const allAcs = getAllAcList();
+    if (allAcs.length === 0) {
+        Swal.fire({ icon: 'warning', title: 'Data Kosong', text: 'Sinkronkan data API terlebih dahulu.' });
+        return;
+    }
+
+    const options = {};
+    allAcs.forEach(ac => { options[ac] = ac; });
+
+    Swal.fire({
+        title: 'Presensi AC Hari Ini',
+        text: 'Pilih nama Area Coordinator Anda:',
+        input: 'select',
+        inputOptions: options,
+        inputPlaceholder: 'Pilih Nama AC...',
+        showCancelButton: true,
+        confirmButtonText: 'Konfirmasi (Check-In)',
+        cancelButtonText: 'Batal'
+    }).then((res) => {
+        if (res.isConfirmed && res.value) {
+            recordAcView(res.value);
+            renderAcStatusList();
+            Swal.fire({
+                icon: 'success',
+                title: 'Presensi Ter-Sync!',
+                text: `${res.value} berhasil dicatat & dikirim ke Sheet ABSENSI AC.`,
+                toast: true,
+                position: 'top-end',
+                timer: 3500,
+                showConfirmButton: false
+            });
+        }
+    });
+};
+
+window.openAcStatusModal = function() {
+    renderAcStatusList();
+    document.getElementById('modal-ac-status').classList.remove('hidden');
+};
+
+window.closeAcStatusModal = function() {
+    document.getElementById('modal-ac-status').classList.add('hidden');
+};
+
+function renderAcStatusList() {
+    const allAcs = getAllAcList();
+    const container = document.getElementById('ac-status-list');
+
+    let seenCount = 0;
+    let unseenCount = 0;
+
+    if (!container) return;
+
+    if (allAcs.length === 0) {
+        container.innerHTML = `<p class="col-span-2 text-center text-xs text-slate-400 py-6">Belum ada data AC. Silakan klik Sync API.</p>`;
+        return;
+    }
+
+    container.innerHTML = allAcs.map(ac => {
+        const timeSeen = APP_STATE.acViewLogs[ac];
+        if (timeSeen) {
+            seenCount++;
+            return `
+                <div class="p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/50 dark:bg-emerald-950/30 flex items-center justify-between">
+                    <div>
+                        <p class="font-extrabold text-xs text-slate-800 dark:text-slate-100">${ac}</p>
+                        <span class="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold">🟢 Hadir Hari Ini</span>
+                    </div>
+                    <span class="text-[10px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/80 px-2 py-0.5 rounded-lg">${timeSeen}</span>
+                </div>
+            `;
+        } else {
+            unseenCount++;
+            return `
+                <div class="p-2.5 rounded-xl border border-rose-200 dark:border-rose-800/60 bg-rose-50/50 dark:bg-rose-950/30 flex items-center justify-between">
+                    <div>
+                        <p class="font-extrabold text-xs text-slate-800 dark:text-slate-100">${ac}</p>
+                        <span class="text-[9px] text-rose-600 dark:text-rose-400 font-semibold">🔴 Belum Absen</span>
+                    </div>
+                    <button onclick="recordAcView('${ac}'); renderAcStatusList();" class="text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-900/80 hover:bg-rose-200 px-2.5 py-1 rounded-md">
+                        Absen
+                    </button>
+                </div>
+            `;
+        }
+    }).join('');
+
+    const elSeen = document.getElementById('stat-ac-seen');
+    const elUnseen = document.getElementById('stat-ac-unseen');
+    if (elSeen) elSeen.innerText = `🟢 ${seenCount} Hadir`;
+    if (elUnseen) elUnseen.innerText = `🔴 ${unseenCount} Belum`;
+    updateAcHeaderBadge();
+}
+
+function isJuiceItem(item) {
+    if (!item) return false;
+    const desc = String(item.DESCP || item.DESC || item.PLU || '').toUpperCase();
+    return desc.includes('JUICE') || desc.includes('JUS') || desc.includes('DRINK') || desc.includes('BEVERAGE');
+}
+
+function parseIndonesianNumber(val) {
+    if (val === null || val === undefined || val === '' || val === '-') return 0;
+    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+    
+    let str = String(val).trim();
+    str = str.replace(/Rp\s?/gi, '').replace(/\s/g, '');
+    
+    if (str.includes(',') && str.includes('.')) {
+        str = str.replace(/\./g, '').replace(',', '.');
+    } else if (str.includes(',') && !str.includes('.')) {
+        str = str.replace(',', '.');
+    } else if (str.split('.').length > 2) {
+        str = str.replace(/\./g, '');
+    }
+    
+    const parsed = parseFloat(str);
+    return isNaN(parsed) ? 0 : parsed;
+}
+
+function parseCompactPayload(compactObj) {
+    if (!compactObj || !compactObj.headers || !compactObj.rows) return [];
+    const headers = compactObj.headers;
+    
+    return compactObj.rows.map(row => {
+        let item = {};
+        headers.forEach((h, idx) => {
+            let val = row[idx];
+            if (['RP_SALES', 'QTY_SALES', 'RP_MARGIN', 'MARGIN', 'QTY_SOH', 'SOH', 'QTY_MUSNAH', 'RP_MUSNAH', 'QTY_REPACK', 'QTY_REPACKING_TOKO'].includes(h)) {
+                val = parseIndonesianNumber(val);
+            }
+            item[h] = val;
+        });
+
+        if (row.length > 16) item._COL_Q_VAL = parseIndonesianNumber(row[16]);
+        if (row.length > 17) item._COL_R_VAL = parseIndonesianNumber(row[18] || row[17]);
+
+        return item;
+    });
+}
+
+function enrichRawDataWithMetadata() {
+    const storeMap = {};
+    APP_STATE.raw.processed.forEach(item => {
+        if (item.KD_STORE && !storeMap[item.KD_STORE]) {
+            storeMap[item.KD_STORE] = {
+                AM: item.AM || '',
+                AC: item.AC || '',
+                NAMA_STORE: item.NAMA_STORE || item.KD_STORE
+            };
+        }
+    });
+
+    APP_STATE.raw.raw_fruit.forEach(item => {
+        if (item.KD_STORE && storeMap[item.KD_STORE]) {
+            if (!item.AM || item.AM === '') item.AM = storeMap[item.KD_STORE].AM;
+            if (!item.AC || item.AC === '') item.AC = storeMap[item.KD_STORE].AC;
+            if (!item.NAMA_STORE || item.NAMA_STORE === '' || item.NAMA_STORE === item.KD_STORE) {
+                item.NAMA_STORE = storeMap[item.KD_STORE].NAMA_STORE;
+            }
+        }
+    });
+}
+
+function getWasteQty(item) {
+    if (!item) return 0;
+    let val = undefined;
+    if (item._COL_Q_VAL !== undefined && item._COL_Q_VAL !== null && item._COL_Q_VAL !== '') {
+        val = item._COL_Q_VAL;
+    } else if (item.QTY_MUSNAH_TOKO !== undefined) {
+        val = item.QTY_MUSNAH_TOKO;
+    } else {
+        val = item.QTY_MUSNAH ?? item.QTY_PEMUSNAHAN ?? item.WASTE_QTY ?? item.QTY_WASTE ?? item.QTY_MUSNAH_DC ?? item.QTY_MUSNAH_TOTAL ?? item.MUSNAH_QTY ?? item.MUSNAH ?? 0;
+    }
+    return Math.abs(Number(val) || 0);
+}
+
+function getWasteRp(item) {
+    if (!item) return 0;
+    let val = undefined;
+    if (item._COL_R_VAL !== undefined && item._COL_R_VAL !== null && item._COL_R_VAL !== '') {
+        val = item._COL_R_VAL;
+    } else if (item.RP_MUSNAH_TOKO !== undefined) {
+        val = item.RP_MUSNAH_TOKO;
+    } else {
+        val = item.RP_MUSNAH ?? item.RP_PEMUSNAHAN ?? item.NILAI_MUSNAH ?? item.WASTE_RP ?? item.RP_WASTE ?? item.RP_MUSNAH_DC ?? item.RP_MUSNAH_TOTAL ?? item.NILAI_MUSNAH_TOKO ?? item.RUPIAH_MUSNAH ?? 0;
+    }
+    return Math.abs(Number(val) || 0);
+}
+
+function formatRupiah(val) {
+    const num = Number(val) || 0;
+    if (Math.abs(num) >= 1e9) return 'Rp ' + (num / 1e9).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' M';
+    if (Math.abs(num) >= 1e6) return 'Rp ' + (num / 1e6).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Jt';
+    if (Math.abs(num) >= 1e3) return 'Rp ' + (num / 1e3).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' Rb';
+    return 'Rp ' + num.toLocaleString('id-ID');
+}
+
+// Point 1 Fix: Label truncation improved to 24 chars for legible chart bars
+function truncateLabel(str, maxLen = 22) {
+    if (!str) return '';
+    return str.length > maxLen ? str.substring(0, maxLen - 2) + '..' : str;
+}
+
+function destroyCharts() {
+    Object.keys(APP_STATE.chartInstances).forEach(key => {
+        if (APP_STATE.chartInstances[key]) {
+            APP_STATE.chartInstances[key].destroy();
+            delete APP_STATE.chartInstances[key];
+        }
+    });
+}
+
+window.fetchData = async function(forceRefresh = false) {
+    const loading = document.getElementById('loading-overlay');
+    const loadingSubtext = document.getElementById('loading-subtext');
+    if (loadingSubtext) {
+        loadingSubtext.innerText = forceRefresh ? "Memaksa Apps Script Rebuild Cache Sheet..." : "Mengambil data realtime dari Google Sheets";
+    }
+    loading.classList.remove('hidden');
+    const startTime = performance.now();
+
+    try {
+        const fetchUrl = forceRefresh ? `${APP_STATE.apiUrl}${APP_STATE.apiUrl.includes('?') ? '&' : '?'}refresh=true` : APP_STATE.apiUrl;
+        const response = await fetch(fetchUrl, { redirect: 'follow' });
+        const result = await response.json();
+
+        if (result.status === 'success' || result.data) {
+            APP_STATE.raw.processed = parseCompactPayload(result.data.processed);
+            APP_STATE.raw.raw_fruit = parseCompactPayload(result.data.raw);
+            APP_STATE.raw.mapping = parseCompactPayload(result.data.mapping);
+
+            enrichRawDataWithMetadata();
+
+            const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
+            const statusEl = document.getElementById('sync-status');
+            const dotEl = document.getElementById('sync-dot');
+            const lastUpdateEl = document.getElementById('last-update-time');
+            
+            let timeString = "";
+            if (result.lastUpdated || result.data?.lastUpdated) {
+                const sheetDate = new Date(result.lastUpdated || result.data.lastUpdated);
+                timeString = sheetDate.toLocaleString('id-ID', {
+                    day: '2-digit', month: 'short', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+            } else {
+                timeString = new Date().toLocaleString('id-ID', {
+                    day: '2-digit', month: 'short', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+            }
+
+            APP_STATE.lastUpdatedTimestamp = timeString;
+
+            statusEl.innerText = forceRefresh ? `Rebuilt (${elapsed}s)` : `Online (${elapsed}s)`;
+            statusEl.classList.add('text-emerald-600');
+            dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping";
+            
+            if (lastUpdateEl) {
+                lastUpdateEl.innerText = `📅 Sheet Edit: ${timeString}`;
+            }
+
+            populateFilters();
+            handleFilterChange();
+            updateAcHeaderBadge();
+
+            Swal.fire({
+                icon: 'success',
+                title: forceRefresh ? 'Cache Sheet Berhasil Di-Rebuild!' : 'Data Berhasil Diperbarui!',
+                html: `Data Spreadsheet terbaru berhasil dimuat.<br><span class="text-xs text-slate-500 font-semibold">Waktu Edit Sheet: ${timeString}</span>`,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3500
+            });
+        } else {
+            throw new Error(result.message || "Gagal mengambil data dari Google Sheets API.");
+        }
+    } catch (error) {
+        console.error("Fetch Error:", error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal Mengambil Data',
+            html: `Gagal menghubungkan ke Apps Script API.<br><span class="text-xs text-rose-500 font-mono">${error.message}</span>`
+        });
+    } finally {
+        loading.classList.add('hidden');
+    }
+};
+
+function populateFilters() {
+    const combined = (APP_STATE.raw.processed || []).concat(APP_STATE.raw.raw_fruit || []);
+    const amSet = new Set();
+    combined.forEach(item => { if (item.AM) amSet.add(item.AM); });
+
+    const selAm = document.getElementById('sel-am');
+    const curAm = selAm.value;
+    selAm.innerHTML = '<option value="ALL">Semua AM</option>' + Array.from(amSet).sort().map(a => `<option value="${a}">${a}</option>`).join('');
+    selAm.value = amSet.has(curAm) ? curAm : 'ALL';
+    
+    updateAcDropdown();
+}
+
+function updateAcDropdown() {
+    const selAm = document.getElementById('sel-am').value;
+    const combined = APP_STATE.raw.processed.concat(APP_STATE.raw.raw_fruit);
+
+    const acSet = new Set();
+    combined.forEach(item => {
+        if (item.AC && (selAm === 'ALL' || item.AM === selAm)) {
+            acSet.add(item.AC);
+        }
+    });
+
+    const selAc = document.getElementById('sel-ac');
+    const curAc = selAc.value;
+    selAc.innerHTML = '<option value="ALL">Semua AC</option>' + Array.from(acSet).sort().map(a => `<option value="${a}">${a}</option>`).join('');
+    selAc.value = acSet.has(curAc) ? curAc : 'ALL';
+
+    updateStoreDropdown();
+}
+
+function updateStoreDropdown() {
+    const selAm = document.getElementById('sel-am').value;
+    const selAc = document.getElementById('sel-ac').value;
+    const combined = APP_STATE.raw.processed.concat(APP_STATE.raw.raw_fruit);
+
+    const storeMap = new Map();
+    combined.forEach(item => {
+        if (item.KD_STORE) {
+            const matchAm = (selAm === 'ALL' || !item.AM || item.AM === selAm);
+            const matchAc = (selAc === 'ALL' || !item.AC || item.AC === selAc);
+            if (matchAm && matchAc) {
+                storeMap.set(item.KD_STORE, item.NAMA_STORE || item.KD_STORE);
+            }
+        }
+    });
+
+    const selStore = document.getElementById('sel-store');
+    const curStore = selStore.value;
+    selStore.innerHTML = '<option value="ALL">Semua Toko</option>' + Array.from(storeMap.entries()).sort((a,b) => a[1].localeCompare(b[1])).map(([kd, name]) => `<option value="${kd}">${name} (${kd})</option>`).join('');
+    selStore.value = storeMap.has(curStore) ? curStore : 'ALL';
+}
+
+window.onAmChange = function() {
+    updateAcDropdown();
+    handleFilterChange();
+};
+
+window.onAcChange = function() {
+    const acVal = document.getElementById('sel-ac').value;
+    if (acVal && acVal !== 'ALL') {
+        recordAcView(acVal);
+    }
+    updateStoreDropdown();
+    handleFilterChange();
+};
+
+window.handleFilterChange = function() {
+    const am = document.getElementById('sel-am').value;
+    const ac = document.getElementById('sel-ac').value;
+    const store = document.getElementById('sel-store').value;
+    const search = document.getElementById('inp-search').value.toLowerCase().trim();
+
+    APP_STATE.filters = { am, ac, store, search };
+
+    const filterFn = (item) => {
+        if (am !== 'ALL' && item.AM && item.AM !== am) return false;
+        if (ac !== 'ALL' && item.AC && item.AC !== ac) return false;
+        if (store !== 'ALL' && item.KD_STORE !== store) return false;
+        if (search !== '') {
+            const matchSearch = 
+                (item.DESCP && item.DESCP.toLowerCase().includes(search)) ||
+                (item.PLU && String(item.PLU).toLowerCase().includes(search)) ||
+                (item.NAMA_STORE && item.NAMA_STORE.toLowerCase().includes(search)) ||
+                (item.KD_STORE && String(item.KD_STORE).toLowerCase().includes(search));
+            if (!matchSearch) return false;
+        }
+        return true;
+    };
+
+    APP_STATE.filtered.processed = APP_STATE.raw.processed.filter(filterFn);
+    APP_STATE.filtered.raw_fruit = APP_STATE.raw.raw_fruit.filter(filterFn);
+
+    APP_STATE.filtered.processed.sort((a, b) => Number(b.RP_SALES || 0) - Number(a.RP_SALES || 0));
+
+    APP_STATE.pagination.page = 1;
+    APP_STATE.pagination.wastePage = 1;
+    APP_STATE.pagination.repackPage = 1;
+
+    renderView();
+};
+
+window.switchView = function(viewName) {
+    if (!CONFIG.PAGES.includes(viewName)) return;
+    APP_STATE.activeView = viewName;
+
+    CONFIG.PAGES.forEach(p => {
+        const navEl = document.getElementById(`nav-${p}`);
+        const bnavEl = document.getElementById(`bnav-${p}`);
+        
+        if (navEl) {
+            if (p === viewName) navEl.classList.add('sidebar-active');
+            else navEl.classList.remove('sidebar-active');
+        }
+
+        if (bnavEl) {
+            if (p === viewName) {
+                bnavEl.classList.add('bottom-nav-active');
+                bnavEl.classList.remove('text-slate-400');
+            } else {
+                bnavEl.classList.remove('bottom-nav-active');
+                bnavEl.classList.add('text-slate-400');
+            }
+        }
+    });
+
+    const titles = {
+        sales: "Sales Performance Overview",
+        waste: "Waste & Pemusnahan Monitoring",
+        repack: "Repacking & Audit Toko"
+    };
+    const titleEl = document.getElementById('view-title-desktop');
+    if (titleEl) titleEl.innerText = titles[viewName] || "Dashboard";
+
+    closeMobileDrawer();
+    renderView();
+};
+
+function renderView() {
+    destroyCharts();
+    const container = document.getElementById('content-area');
+    if (!container) return;
+
+    if (APP_STATE.activeView === 'sales') {
+        renderSales(container);
+    } else if (APP_STATE.activeView === 'waste') {
+        renderWaste(container);
+    } else if (APP_STATE.activeView === 'repack') {
+        renderRepack(container);
+    }
+}
+
+function renderSales(container) {
+    const pData = APP_STATE.filtered.processed.sort((a, b) => Number(b.RP_SALES || 0) - Number(a.RP_SALES || 0));
+    
+    // Calculate total, Cut Fruit, and Juice sales
+    let totalSalesRp = 0, totalQtySales = 0;
+    let cutFruitRp = 0, cutFruitQty = 0;
+    let juiceRp = 0, juiceQty = 0;
+
+    pData.forEach(item => {
+        const rp = Number(item.RP_SALES || 0);
+        const qty = Number(item.QTY_SALES || 0);
+        totalSalesRp += rp;
+        totalQtySales += qty;
+
+        if (isJuiceItem(item)) {
+            juiceRp += rp;
+            juiceQty += qty;
+        } else {
+            cutFruitRp += rp;
+            cutFruitQty += qty;
+        }
+    });
+
+    const activeStoresCount = new Set(pData.map(x => x.KD_STORE).filter(Boolean)).size;
+
+    // Point 1: Replace top KPI cards with Cut Fruit & Juice Sales
+    container.innerHTML = `
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-5">
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-emerald-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Sales</span>
+                <h3 class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">${formatRupiah(totalSalesRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">${totalQtySales.toLocaleString('id-ID')} Pcs Total</p>
+            </div>
+
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-amber-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Sales Cut Fruit</span>
+                <h3 class="text-base sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-0.5 truncate">${formatRupiah(cutFruitRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-amber-500 mt-0.5 font-extrabold">${cutFruitQty.toLocaleString('id-ID')} Pcs</p>
+            </div>
+
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-teal-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Sales Juice</span>
+                <h3 class="text-base sm:text-2xl font-black text-teal-600 dark:text-teal-400 mt-0.5 truncate">${formatRupiah(juiceRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-teal-500 mt-0.5 font-extrabold">${juiceQty.toLocaleString('id-ID')} Pcs</p>
+            </div>
+
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-indigo-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Toko Aktif</span>
+                <h3 class="text-base sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5">${activeStoresCount} Toko</h3>
+                <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">Berpenjualan</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-black text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">
+                        🏪 Top 10 Toko Penjualan Terbesar
+                    </h4>
+                </div>
+                <div class="chart-container"><canvas id="chart-top-stores"></canvas></div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-black text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">
+                        🍹 Top 10 Produk Terlaris
+                    </h4>
+                </div>
+                <div class="chart-container"><canvas id="chart-top-products"></canvas></div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Rincian Penjualan Produk</h4>
+                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full">${pData.length} Item</span>
+            </div>
+
+            <div class="data-table-container">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 uppercase tracking-wider text-[9px] sm:text-[10px]">
+                        <tr>
+                            <th class="px-3 sm:px-5 py-2.5">Toko</th>
+                            <th class="px-3 sm:px-5 py-2.5">PLU & Produk</th>
+                            <th class="px-3 sm:px-5 py-2.5 text-right">Qty</th>
+                            <th class="px-3 sm:px-5 py-2.5 text-right bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">Rp Sales ⬇</th>
+                            <th class="px-3 sm:px-5 py-2.5 text-right">Rp Margin</th>
+                            <th class="px-3 sm:px-5 py-2.5 text-right font-black text-blue-600 dark:text-blue-400">% Margin</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        ${renderSalesTableRows(pData)}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="p-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                <span class="text-[11px] text-slate-500">Hal ${APP_STATE.pagination.page} / ${Math.ceil(pData.length / APP_STATE.pagination.limit) || 1}</span>
+                <div class="flex items-center gap-1">
+                    <button onclick="changePage(-1)" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-bold text-xs">Prev</button>
+                    <button onclick="changePage(1)" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-bold text-xs">Next</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    renderSalesCharts(pData);
+}
+
+// Point 1 Fix: Clean chart layout with padded labels
+function renderSalesCharts(pData) {
+    const storeMap = {};
+    const prodMap = {};
+
+    pData.forEach(item => {
+        const storeName = item.NAMA_STORE || item.KD_STORE || 'Store';
+        const prodName = item.DESCP || item.PLU || 'Item';
+        const sales = Number(item.RP_SALES || 0);
+
+        storeMap[storeName] = (storeMap[storeName] || 0) + sales;
+        prodMap[prodName] = (prodMap[prodName] || 0) + sales;
+    });
+
+    const topStores = Object.entries(storeMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const topProducts = Object.entries(prodMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const labelColor = isDark ? '#cbd5e1' : '#475569';
+    const gridColor = isDark ? 'rgba(51, 65, 85, 0.4)' : 'rgba(226, 232, 240, 0.6)';
+
+    const ctxStores = document.getElementById('chart-top-stores');
+    if (ctxStores && topStores.length > 0) {
+        APP_STATE.chartInstances.stores = new Chart(ctxStores, {
+            type: 'bar',
+            data: {
+                labels: topStores.map(s => truncateLabel(s[0])),
+                datasets: [{
+                    label: 'Sales (Rp)',
+                    data: topStores.map(s => s[1]),
+                    backgroundColor: '#10b981',
+                    borderRadius: 6,
+                    barThickness: 14
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                layout: { padding: { right: 20, left: 10 } },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { color: labelColor, font: { size: 10 }, callback: v => formatRupiah(v) } },
+                    y: { grid: { display: false }, ticks: { color: labelColor, font: { size: 10, weight: 'bold' }, autoSkip: false } }
+                }
+            }
+        });
+    }
+
+    const ctxProducts = document.getElementById('chart-top-products');
+    if (ctxProducts && topProducts.length > 0) {
+        APP_STATE.chartInstances.products = new Chart(ctxProducts, {
+            type: 'bar',
+            data: {
+                labels: topProducts.map(p => truncateLabel(p[0])),
+                datasets: [{
+                    label: 'Sales (Rp)',
+                    data: topProducts.map(p => p[1]),
+                    backgroundColor: '#0d9488',
+                    borderRadius: 6,
+                    barThickness: 14
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                layout: { padding: { right: 20, left: 10 } },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { color: labelColor, font: { size: 10 }, callback: v => formatRupiah(v) } },
+                    y: { grid: { display: false }, ticks: { color: labelColor, font: { size: 10, weight: 'bold' }, autoSkip: false } }
+                }
+            }
+        });
+    }
+}
+
+function renderWaste(container) {
+    const pData = APP_STATE.filtered.processed;
+    const rData = APP_STATE.filtered.raw_fruit;
+
+    // Point 2: Separate Waste into Cut Fruit, Juice, and Raw Material
+    let wCutFruitRp = 0, qCutFruit = 0;
+    let wJuiceRp = 0, qJuice = 0;
+    let wRawRp = 0, qRaw = 0;
+
+    const combinedWasteList = [];
+
+    pData.forEach(item => {
+        const qtyMusnah = getWasteQty(item);
+        const rpMusnah = getWasteRp(item);
+        const rpSales = Number(item.RP_SALES || 0);
+        const rpProfit = rpSales - rpMusnah; // Point 2: Rp Sales - Rp Pemusnahan
+
+        const isJuice = isJuiceItem(item);
+        if (isJuice) {
+            wJuiceRp += rpMusnah;
+            qJuice += qtyMusnah;
+        } else {
+            wCutFruitRp += rpMusnah;
+            qCutFruit += qtyMusnah;
+        }
+
+        combinedWasteList.push({ 
+            type: isJuice ? 'JUICE' : 'CUT FRUIT', 
+            store: item.NAMA_STORE || item.KD_STORE || 'Store', 
+            kdStore: item.KD_STORE || '', 
+            plu: item.PLU || '-', 
+            descp: item.DESCP || 'Item Processed', 
+            qtyMusnah, 
+            rpMusnah, 
+            rpSales,
+            rpProfit 
+        });
+    });
+
+    rData.forEach(item => {
+        const qtyMusnah = getWasteQty(item);
+        const rpMusnah = getWasteRp(item);
+        const rpSales = Number(item.RP_SALES || 0);
+        const rpProfit = rpSales - rpMusnah;
+
+        wRawRp += rpMusnah;
+        qRaw += qtyMusnah;
+
+        combinedWasteList.push({ 
+            type: 'RAW FRUIT', 
+            store: item.NAMA_STORE || item.KD_STORE || 'Store', 
+            kdStore: item.KD_STORE || '', 
+            plu: item.PLU || '-', 
+            descp: item.DESCP || 'Raw Material', 
+            qtyMusnah, 
+            rpMusnah, 
+            rpSales,
+            rpProfit 
+        });
+    });
+
+    const totalWasteRp = wCutFruitRp + wJuiceRp + wRawRp;
+    combinedWasteList.sort((a, b) => b.rpMusnah - a.rpMusnah || b.qtyMusnah - a.qtyMusnah);
+
+    // Point 2: KPI Boxes include Juice Waste
+    container.innerHTML = `
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-5">
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-rose-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Waste Cut Fruit</span>
+                <h3 class="text-base sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-0.5 truncate">${formatRupiah(wCutFruitRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-rose-500 font-bold mt-0.5">${qCutFruit.toLocaleString('id-ID')} Pcs</p>
+            </div>
+
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-teal-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Waste Juice</span>
+                <h3 class="text-base sm:text-2xl font-black text-teal-600 dark:text-teal-400 mt-0.5 truncate">${formatRupiah(wJuiceRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-teal-500 font-bold mt-0.5">${qJuice.toLocaleString('id-ID')} Pcs</p>
+            </div>
+
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-amber-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Waste Raw Fruit</span>
+                <h3 class="text-base sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-0.5 truncate">${formatRupiah(wRawRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-amber-500 font-bold mt-0.5">${qRaw.toLocaleString('id-ID')} Kg/Unit</p>
+            </div>
+
+            <div class="kpi-card bg-slate-900 text-white border border-slate-800 border-t-4 border-t-rose-600 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Waste</span>
+                <h3 class="text-base sm:text-2xl font-black text-white mt-0.5 truncate">${formatRupiah(totalWasteRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-rose-400 font-bold mt-0.5">Kerugian Pemusnahan</p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm mb-5">
+            <div class="flex items-center justify-between mb-3">
+                <h4 class="font-black text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">
+                    🚨 Top Toko Pemusnahan Terbesar
+                </h4>
+            </div>
+            <div class="chart-container"><canvas id="chart-waste-compare"></canvas></div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Rincian Pemusnahan</h4>
+                <span class="text-[10px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-950 px-2 py-0.5 rounded-full">${combinedWasteList.length} Item</span>
+            </div>
+
+            <div class="data-table-container">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 uppercase tracking-wider text-[9px] sm:text-[10px]">
+                        <tr>
+                            <th class="px-3 sm:px-5 py-2.5">Toko</th>
+                            <th class="px-3 sm:px-5 py-2.5">PLU & Item</th>
+                            <th class="px-3 sm:px-5 py-2.5 text-center">Tipe</th>
+                            <th class="px-3 sm:px-5 py-2.5 text-right bg-rose-50/50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400">Rp Musnah ⬇</th>
+                            <th class="px-3 sm:px-5 py-2.5 text-right">Rp Sales</th>
+                            <th class="px-3 sm:px-5 py-2.5 text-right font-black text-emerald-600 dark:text-emerald-400">Rp Profit</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        ${renderWasteTableRows(combinedWasteList)}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="p-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                <span class="text-[11px] text-slate-500">Hal ${APP_STATE.pagination.wastePage} / ${Math.ceil(combinedWasteList.length / APP_STATE.pagination.limit) || 1}</span>
+                <div class="flex items-center gap-1">
+                    <button onclick="changeWastePage(-1)" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-bold text-xs">Prev</button>
+                    <button onclick="changeWastePage(1)" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-bold text-xs">Next</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    renderWasteCharts(pData, rData);
+}
+
+function renderWasteCharts(pData, rData) {
+    const storeWasteMap = {};
+    pData.forEach(x => {
+        const storeName = x.NAMA_STORE || x.KD_STORE || 'Store';
+        if (!storeWasteMap[storeName]) storeWasteMap[storeName] = { name: storeName, pWaste: 0, rWaste: 0 };
+        storeWasteMap[storeName].pWaste += getWasteRp(x);
+    });
+
+    rData.forEach(x => {
+        const storeName = x.NAMA_STORE || x.KD_STORE || 'Store';
+        if (!storeWasteMap[storeName]) storeWasteMap[storeName] = { name: storeName, pWaste: 0, rWaste: 0 };
+        storeWasteMap[storeName].rWaste += getWasteRp(x);
+    });
+
+    const topWasteStores = Object.values(storeWasteMap)
+        .sort((a, b) => (b.pWaste + b.rWaste) - (a.pWaste + a.rWaste))
+        .slice(0, 10);
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const labelColor = isDark ? '#cbd5e1' : '#475569';
+    const gridColor = isDark ? 'rgba(51, 65, 85, 0.4)' : 'rgba(226, 232, 240, 0.6)';
+
+    const ctxWaste = document.getElementById('chart-waste-compare');
+    if (ctxWaste && topWasteStores.length > 0) {
+        APP_STATE.chartInstances.waste = new Chart(ctxWaste, {
+            type: 'bar',
+            data: {
+                labels: topWasteStores.map(s => truncateLabel(s.name)),
+                datasets: [
+                    { label: 'Cut Fruit & Juice', data: topWasteStores.map(s => s.pWaste), backgroundColor: '#f43f5e', borderRadius: 4, barThickness: 14 },
+                    { label: 'Raw Fruit', data: topWasteStores.map(s => s.rWaste), backgroundColor: '#f59e0b', borderRadius: 4, barThickness: 14 }
+                ]
+            },
+            options: { 
+                indexAxis: 'y',
+                maintainAspectRatio: false, 
+                layout: { padding: { right: 20, left: 10 } },
+                plugins: { legend: { position: 'top', labels: { color: labelColor, font: { size: 10 } } } },
+                scales: {
+                    x: { stacked: true, grid: { color: gridColor }, ticks: { color: labelColor, font: { size: 10 }, callback: value => formatRupiah(value) } },
+                    y: { stacked: true, grid: { display: false }, ticks: { color: labelColor, font: { size: 10, weight: 'bold' }, autoSkip: false } }
+                }
+            }
+        });
+    }
+}
+
+function renderRepack(container) {
+    const mapping = APP_STATE.raw.mapping;
+    const processedList = APP_STATE.filtered.processed;
+    const rawList = APP_STATE.filtered.raw_fruit;
+
+    const rawLookup = new Map();
+    rawList.forEach(item => { if (item.KD_STORE && item.PLU) rawLookup.set(`${item.KD_STORE}___${item.PLU}`, item); });
+
+    const procLookup = new Map();
+    processedList.forEach(item => { if (item.KD_STORE && item.PLU) procLookup.set(`${item.KD_STORE}___${item.PLU}`, item); });
+
+    const allStoresMap = {};
+    processedList.forEach(p => { if (p.KD_STORE) allStoresMap[p.KD_STORE] = p.NAMA_STORE || p.KD_STORE; });
+    rawList.forEach(r => { if (r.KD_STORE && !allStoresMap[r.KD_STORE]) allStoresMap[r.KD_STORE] = r.NAMA_STORE || r.KD_STORE; });
+
+    const repackStoreRows = [];
+
+    Object.keys(allStoresMap).forEach(kdStore => {
+        const storeName = allStoresMap[kdStore];
+        mapping.forEach(m => {
+            const pluAsal = String(m.PLU_ASAL || m.PLU_RAW).trim();
+            const pluHasil = String(m.PLU || m.PLU_PROCESSED).trim();
+
+            const rawItem = rawLookup.get(`${kdStore}___${pluAsal}`);
+            const procItem = procLookup.get(`${kdStore}___${pluHasil}`);
+
+            const sohRaw = Number(rawItem?.QTY_SOH || rawItem?.SOH || 0);
+            const sohProcessed = Number(procItem?.QTY_SOH || procItem?.SOH || 0);
+            const qtyRepack = Number(procItem?.QTY_REPACKING_TOKO || procItem?.QTY_REPACK || 0);
+            const qtySales = Number(procItem?.QTY_SALES || 0);
+
+            if (sohRaw > 0 || sohProcessed > 0 || qtyRepack > 0 || qtySales > 0) {
+                // Point 3: % Repacking / Sales = (Qty Repack / Qty Sales) * 100
+                let ratioRepackSales = qtySales > 0 ? (qtyRepack / qtySales) * 100 : (qtyRepack > 0 ? 100 : 0);
+                repackStoreRows.push({
+                    kdStore, storeName, pluAsal,
+                    descAsal: m.DESC_ASAL || rawItem?.DESCP || 'Raw Material',
+                    sohRaw, pluHasil,
+                    descHasil: m.DESC || procItem?.DESCP || 'Hasil Repack',
+                    sohProcessed, qtyRepack, qtySales, ratioRepackSales
+                });
+            }
+        });
+    });
+
+    repackStoreRows.sort((a, b) => {
+        const aPriority = (a.sohProcessed === 0 && a.sohRaw > 0) ? 1 : 0;
+        const bPriority = (b.sohProcessed === 0 && b.sohRaw > 0) ? 1 : 0;
+        if (aPriority !== bPriority) return bPriority - aPriority;
+        if (aPriority === 1) return b.sohRaw - a.sohRaw;
+        return b.qtyRepack - a.qtyRepack || b.sohRaw - a.sohRaw;
+    });
+
+    const totalSohRaw = repackStoreRows.reduce((a, b) => a + b.sohRaw, 0);
+    const totalSohProc = repackStoreRows.reduce((a, b) => a + b.sohProcessed, 0);
+    const alertZeroCount = repackStoreRows.filter(r => r.sohProcessed === 0 && r.sohRaw > 0).length;
+
+    // Point 3: Added Qty Sales & % Repacking / Sales columns in table
+    container.innerHTML = `
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 mb-5">
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-l-4 border-l-rose-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Perlu Repack Segera</span>
+                <h3 class="text-base sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-0.5">${alertZeroCount} Item</h3>
+                <span class="text-[9px] text-slate-400 font-medium block">SOH Hasil = 0</span>
+            </div>
+
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-l-4 border-l-amber-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">SOH Raw Material</span>
+                <h3 class="text-base sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-0.5">${totalSohRaw.toLocaleString('id-ID')}</h3>
+                <span class="text-[9px] text-slate-400 font-medium block">Stok Mentah Aktif</span>
+            </div>
+
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-l-4 border-l-emerald-500 shadow-sm col-span-2 sm:col-span-1">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">SOH Cut Fruit/Juice</span>
+                <h3 class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">${totalSohProc.toLocaleString('id-ID')}</h3>
+                <span class="text-[9px] text-slate-400 font-medium block">Stok Siap Jual</span>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Audit Repacking Per Toko</h4>
+                <span class="text-[10px] font-bold text-purple-600 bg-purple-50 dark:bg-purple-950 px-2 py-0.5 rounded-full">${repackStoreRows.length} Baris</span>
+            </div>
+
+            <div class="data-table-container">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 uppercase tracking-wider text-[9px] sm:text-[10px]">
+                        <tr>
+                            <th class="px-3 sm:px-5 py-2.5">Toko</th>
+                            <th class="px-3 sm:px-5 py-2.5">Raw Item</th>
+                            <th class="px-3 sm:px-5 py-2.5 text-right bg-amber-500/10 text-amber-700 dark:text-amber-300">SOH Raw</th>
+                            <th class="px-3 sm:px-5 py-2.5">Hasil Repack</th>
+                            <th class="px-3 sm:px-5 py-2.5 text-right bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">SOH Hasil</th>
+                            <th class="px-3 sm:px-5 py-2.5 text-right font-black text-teal-600 dark:text-teal-400">Qty Sales</th>
+                            <th class="px-3 sm:px-5 py-2.5 text-center font-black text-indigo-600 dark:text-indigo-400">% Repack / Sales</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        ${renderRepackStoreTableRows(repackStoreRows)}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="p-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                <span class="text-[11px] text-slate-500">Hal ${APP_STATE.pagination.repackPage} / ${Math.ceil(repackStoreRows.length / APP_STATE.pagination.limit) || 1}</span>
+                <div class="flex items-center gap-1">
+                    <button onclick="changeRepackPage(-1)" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-bold text-xs">Prev</button>
+                    <button onclick="changeRepackPage(1)" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-bold text-xs">Next</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderSalesTableRows(data) {
+    const start = (APP_STATE.pagination.page - 1) * APP_STATE.pagination.limit;
+    const paginated = data.slice(start, start + APP_STATE.pagination.limit);
+
+    if (paginated.length === 0) {
+        return `<tr><td colspan="6" class="text-center py-6 text-slate-400">Tidak ada data ditemukan</td></tr>`;
+    }
+
+    return paginated.map(row => {
+        const rpSales = Number(row.RP_SALES || 0);
+        const rpMargin = Number(row.RP_MARGIN || row.MARGIN || 0);
+        // Point 1: Calculate % Margin = Rp Margin / Rp Sales
+        const pctMargin = rpSales > 0 ? (rpMargin / rpSales) * 100 : 0;
+
+        return `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                <td class="px-3 sm:px-5 py-2.5 font-bold text-slate-700 dark:text-slate-300">
+                    ${row.NAMA_STORE || row.KD_STORE}
+                    <span class="block text-[9px] text-slate-400 font-normal">${row.KD_STORE || ''}</span>
+                </td>
+                <td class="px-3 sm:px-5 py-2.5">
+                    <p class="font-medium text-slate-800 dark:text-slate-200 leading-tight">${row.DESCP || '-'}</p>
+                    <span class="text-[9px] text-slate-400">PLU: ${row.PLU || '-'}</span>
+                </td>
+                <td class="px-3 sm:px-5 py-2.5 text-right font-semibold">${Number(row.QTY_SALES || 0).toLocaleString('id-ID')}</td>
+                <td class="px-3 sm:px-5 py-2.5 text-right font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50/20 dark:bg-emerald-950/10">Rp ${rpSales.toLocaleString('id-ID')}</td>
+                <td class="px-3 sm:px-5 py-2.5 text-right font-semibold text-slate-700 dark:text-slate-300">Rp ${rpMargin.toLocaleString('id-ID')}</td>
+                <td class="px-3 sm:px-5 py-2.5 text-right font-black text-blue-600 dark:text-blue-400">${pctMargin.toFixed(1)}%</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderWasteTableRows(data) {
+    const start = (APP_STATE.pagination.wastePage - 1) * APP_STATE.pagination.limit;
+    const paginated = data.slice(start, start + APP_STATE.pagination.limit);
+
+    if (paginated.length === 0) {
+        return `<tr><td colspan="6" class="text-center py-6 text-slate-400">Tidak ada data ditemukan</td></tr>`;
+    }
+
+    return paginated.map(row => {
+        const profitClass = row.rpProfit < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400';
+        return `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                <td class="px-3 sm:px-5 py-2.5 font-bold text-slate-700 dark:text-slate-300">
+                    ${row.store}
+                    <span class="block text-[9px] text-slate-400 font-normal">${row.kdStore}</span>
+                </td>
+                <td class="px-3 sm:px-5 py-2.5">
+                    <p class="font-medium text-slate-800 dark:text-slate-200 leading-tight">${row.descp}</p>
+                    <span class="text-[9px] text-slate-400">PLU: ${row.plu}</span>
+                </td>
+                <td class="px-3 sm:px-5 py-2.5 text-center">
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${row.type === 'JUICE' ? 'bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-400' : (row.type === 'CUT FRUIT' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400')}">
+                        ${row.type}
+                    </span>
+                </td>
+                <td class="px-3 sm:px-5 py-2.5 text-right font-black text-rose-600 dark:text-rose-400 bg-rose-50/20 dark:bg-rose-950/10">
+                    Rp ${row.rpMusnah.toLocaleString('id-ID')}
+                </td>
+                <td class="px-3 sm:px-5 py-2.5 text-right font-semibold text-slate-700 dark:text-slate-300">
+                    Rp ${row.rpSales.toLocaleString('id-ID')}
+                </td>
+                <td class="px-3 sm:px-5 py-2.5 text-right font-black ${profitClass}">
+                    Rp ${row.rpProfit.toLocaleString('id-ID')}
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderRepackStoreTableRows(data) {
+    const start = (APP_STATE.pagination.repackPage - 1) * APP_STATE.pagination.limit;
+    const paginated = data.slice(start, start + APP_STATE.pagination.limit);
+
+    if (paginated.length === 0) {
+        return `<tr><td colspan="7" class="text-center py-6 text-slate-400">Tidak ada data ditemukan</td></tr>`;
+    }
+
+    return paginated.map(row => {
+        const isPriorityZero = row.sohProcessed === 0 && row.sohRaw > 0;
+        let badgeStyle = '';
+        let ratioLabel = '';
+
+        if (isPriorityZero) {
+            ratioLabel = '⚠️ Perlu Repack';
+            badgeStyle = 'bg-rose-600 text-white font-extrabold animate-pulse';
+        } else {
+            ratioLabel = `${row.ratioRepackSales.toFixed(1)}%`;
+            badgeStyle = 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 font-extrabold';
+        }
+
+        return `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors ${isPriorityZero ? 'bg-rose-500/5 dark:bg-rose-950/20' : ''}">
+                <td class="px-3 sm:px-5 py-2.5 font-bold text-slate-800 dark:text-slate-200">
+                    ${row.storeName}
+                    <span class="block text-[9px] text-slate-400 font-semibold">${row.kdStore}</span>
+                </td>
+                <td class="px-3 sm:px-5 py-2.5 font-semibold text-amber-600 dark:text-amber-400">
+                    ${row.descAsal}
+                    <span class="block text-[9px] text-slate-400 font-normal">PLU: ${row.pluAsal}</span>
+                </td>
+                <td class="px-3 sm:px-5 py-2.5 text-right font-black text-amber-700 dark:text-amber-300 bg-amber-500/10">${row.sohRaw.toLocaleString('id-ID')}</td>
+                <td class="px-3 sm:px-5 py-2.5 font-semibold text-slate-800 dark:text-slate-200">
+                    ${row.descHasil}
+                    <span class="block text-[9px] text-slate-400 font-normal">PLU: ${row.pluHasil}</span>
+                </td>
+                <td class="px-3 sm:px-5 py-2.5 text-right font-black ${isPriorityZero ? 'text-rose-600 dark:text-rose-400 bg-rose-500/20' : 'text-emerald-700 dark:text-emerald-300'}">
+                    ${row.sohProcessed.toLocaleString('id-ID')}
+                </td>
+                <td class="px-3 sm:px-5 py-2.5 text-right font-black text-teal-600 dark:text-teal-400">
+                    ${row.qtySales.toLocaleString('id-ID')}
+                </td>
+                <td class="px-3 sm:px-5 py-2.5 text-center">
+                    <span class="px-2 py-0.5 rounded text-[10px] inline-block ${badgeStyle}">
+                        ${ratioLabel}
+                    </span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+window.changePage = function(delta) {
+    const maxPage = Math.ceil(APP_STATE.filtered.processed.length / APP_STATE.pagination.limit) || 1;
+    const newPage = APP_STATE.pagination.page + delta;
+    if (newPage >= 1 && newPage <= maxPage) {
+        APP_STATE.pagination.page = newPage;
+        renderView();
+    }
+};
+
+window.changeWastePage = function(delta) {
+    const totalItems = APP_STATE.filtered.processed.length + APP_STATE.filtered.raw_fruit.length;
+    const maxPage = Math.ceil(totalItems / APP_STATE.pagination.limit) || 1;
+    const newPage = APP_STATE.pagination.wastePage + delta;
+    if (newPage >= 1 && newPage <= maxPage) {
+        APP_STATE.pagination.wastePage = newPage;
+        renderView();
+    }
+};
+
+window.changeRepackPage = function(delta) {
+    const newPage = APP_STATE.pagination.repackPage + delta;
+    if (newPage >= 1) {
+        APP_STATE.pagination.repackPage = newPage;
+        renderView();
+    }
+};
+
+// Point 4 Fix: Reliable Dark Mode Toggle
+window.toggleDarkMode = function() {
+    APP_STATE.isDarkMode = !APP_STATE.isDarkMode;
+    const htmlEl = document.documentElement;
+    const themeIcon = document.getElementById('theme-icon');
+    const themeLabel = document.getElementById('theme-label');
+
+    if (APP_STATE.isDarkMode) {
+        htmlEl.classList.add('dark');
+        if (themeIcon) themeIcon.innerText = '☀️';
+        if (themeLabel) themeLabel.innerText = 'Mode Terang';
+    } else {
+        htmlEl.classList.remove('dark');
+        if (themeIcon) themeIcon.innerText = '🌙';
+        if (themeLabel) themeLabel.innerText = 'Mode Gelap';
+    }
+    
+    // Re-render chart colors to adapt to active mode
+    if (APP_STATE.activeView) {
+        renderView();
+    }
+};
+
+window.exportToExcel = function() {
+    if (!APP_STATE.raw.processed || APP_STATE.raw.processed.length === 0) {
+        Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Data belum disinkronkan atau kosong.' });
+        return;
+    }
+
+    const wb = XLSX.utils.book_new();
+    const wsProcessed = XLSX.utils.json_to_sheet(APP_STATE.filtered.processed);
+    XLSX.utils.book_append_sheet(wb, wsProcessed, "Cut Fruit & Juice");
+    const wsRaw = XLSX.utils.json_to_sheet(APP_STATE.filtered.raw_fruit);
+    XLSX.utils.book_append_sheet(wb, wsRaw, "Raw Fruit");
+    XLSX.writeFile(wb, `CutFruit_Operations_Report_${new Date().toISOString().slice(0, 10)}.xlsx`);
+};
+
+window.recordAcView = recordAcView;
+
+window.onload = async () => {
+    await initCloudSync();
+    fetchData();
+};
+</script>
+</body>
+</html>
