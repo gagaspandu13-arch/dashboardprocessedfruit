@@ -6,8 +6,9 @@
     <title>Cut Fruit & Juice Operational Dashboard</title>
     
     <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        window.tailwind = {
+        tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
@@ -24,7 +25,6 @@
             }
         };
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- External Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -105,7 +105,6 @@
 
 <div class="min-h-screen flex flex-col lg:flex-row">
 
-    <!-- Sidebar Navigation (Desktop & Mobile Drawer) -->
     <aside id="sidebar-drawer" class="fixed lg:sticky top-0 left-0 h-screen w-72 lg:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-shrink-0 flex flex-col justify-between p-4 z-50 shadow-2xl lg:shadow-none -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
         <div>
             <!-- Brand Logo Header -->
@@ -175,7 +174,6 @@
     </aside>
 
     <div class="flex-1 flex flex-col min-h-screen min-w-0">
-        <!-- Responsive Header Bar -->
         <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3 sm:px-6 py-2.5 no-print">
             <div class="max-w-7xl mx-auto flex flex-col gap-2.5">
                 
@@ -262,7 +260,6 @@
     </div>
 </div>
 
-<!-- Mobile Bottom Navigation Bar -->
 <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 px-2 py-1.5 shadow-lg flex items-center justify-around no-print">
     <button id="bnav-sales" onclick="switchView('sales')" class="flex flex-col items-center py-1 px-3 rounded-xl transition-all bottom-nav-active">
         <span class="text-lg leading-none">📊</span>
@@ -282,7 +279,7 @@
     </button>
 </nav>
 
-<!-- AC Attendance Modal (Fully Rebuilt) -->
+<!-- AC Attendance Modal -->
 <div id="modal-ac-status" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/50">
@@ -443,7 +440,6 @@ function recordAcAttendance(acName) {
 </div>
 
 <script>
-    // Global Window Helpers to prevent scope execution issues
     window.openGasModal = function() {
         document.getElementById('modal-gas-code').classList.remove('hidden');
     };
@@ -479,9 +475,14 @@ const CONFIG = {
     PAGES: ['sales', 'waste', 'repack']
 };
 
+// Check local storage for dark mode preference or system setting
+const savedTheme = localStorage.getItem('theme');
+const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const initialDarkMode = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+
 const APP_STATE = {
     activeView: 'sales',
-    isDarkMode: false,
+    isDarkMode: initialDarkMode,
     apiUrl: localStorage.getItem('GAS_API_URL') || CONFIG.DEFAULT_API_URL,
     raw: { processed: [], raw_fruit: [], mapping: [] },
     filtered: { processed: [], raw_fruit: [] },
@@ -494,6 +495,34 @@ const APP_STATE = {
     db: null,
     auth: null,
     appId: typeof __app_id !== 'undefined' ? __app_id : 'cut-fruit-operational-dashboard'
+};
+
+function applyDarkModeUI() {
+    const htmlEl = document.documentElement;
+    const themeIcon = document.getElementById('theme-icon');
+    const themeLabel = document.getElementById('theme-label');
+
+    if (APP_STATE.isDarkMode) {
+        htmlEl.classList.add('dark');
+        htmlEl.classList.remove('light');
+        if (themeIcon) themeIcon.innerText = '☀️';
+        if (themeLabel) themeLabel.innerText = 'Mode Terang';
+        localStorage.setItem('theme', 'dark');
+    } else {
+        htmlEl.classList.remove('dark');
+        htmlEl.classList.add('light');
+        if (themeIcon) themeIcon.innerText = '🌙';
+        if (themeLabel) themeLabel.innerText = 'Mode Gelap';
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+window.toggleDarkMode = function() {
+    APP_STATE.isDarkMode = !APP_STATE.isDarkMode;
+    applyDarkModeUI();
+    if (APP_STATE.activeView) {
+        renderView();
+    }
 };
 
 async function initCloudSync() {
@@ -545,7 +574,6 @@ function getTodayKey() {
     return `${year}-${month}-${day}`;
 }
 
-// Point 5: Record AC Attendance and Sync to Google Sheet ABSENSI AC
 async function recordAcView(acName) {
     if (!acName || acName === 'ALL') return;
     const today = getTodayKey();
@@ -554,7 +582,6 @@ async function recordAcView(acName) {
     APP_STATE.acViewLogs[acName] = timeStr;
     updateAcHeaderBadge();
 
-    // 1. Send to Google Apps Script Endpoint (Sheet: "ABSENSI AC")
     try {
         const sendUrl = `${APP_STATE.apiUrl}${APP_STATE.apiUrl.includes('?') ? '&' : '?'}action=absen_ac&acName=${encodeURIComponent(acName)}`;
         fetch(sendUrl, { method: 'GET', mode: 'no-cors' }).catch(err => console.log("GAS Absen trigger dispatched:", err));
@@ -562,7 +589,6 @@ async function recordAcView(acName) {
         console.warn("GAS Attendance dispatch error:", e);
     }
 
-    // 2. Sync to Firestore Realtime DB for immediate UI updates across devices
     if (APP_STATE.db && APP_STATE.auth?.currentUser) {
         try {
             const attendanceDocRef = doc(APP_STATE.db, 'artifacts', APP_STATE.appId, 'public', 'data', 'ac_attendance', today);
@@ -796,7 +822,6 @@ function formatRupiah(val) {
     return 'Rp ' + num.toLocaleString('id-ID');
 }
 
-// Point 1 Fix: Label truncation improved to 24 chars for legible chart bars
 function truncateLabel(str, maxLen = 22) {
     if (!str) return '';
     return str.length > maxLen ? str.substring(0, maxLen - 2) + '..' : str;
@@ -1045,7 +1070,6 @@ function renderView() {
 function renderSales(container) {
     const pData = APP_STATE.filtered.processed.sort((a, b) => Number(b.RP_SALES || 0) - Number(a.RP_SALES || 0));
     
-    // Calculate total, Cut Fruit, and Juice sales
     let totalSalesRp = 0, totalQtySales = 0;
     let cutFruitRp = 0, cutFruitQty = 0;
     let juiceRp = 0, juiceQty = 0;
@@ -1067,7 +1091,6 @@ function renderSales(container) {
 
     const activeStoresCount = new Set(pData.map(x => x.KD_STORE).filter(Boolean)).size;
 
-    // Point 1: Replace top KPI cards with Cut Fruit & Juice Sales
     container.innerHTML = `
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-5">
             <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-emerald-500 shadow-sm">
@@ -1152,7 +1175,6 @@ function renderSales(container) {
     renderSalesCharts(pData);
 }
 
-// Point 1 Fix: Clean chart layout with padded labels
 function renderSalesCharts(pData) {
     const storeMap = {};
     const prodMap = {};
@@ -1169,7 +1191,7 @@ function renderSalesCharts(pData) {
     const topStores = Object.entries(storeMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
     const topProducts = Object.entries(prodMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
 
-    const isDark = document.documentElement.classList.contains('dark');
+    const isDark = APP_STATE.isDarkMode;
     const labelColor = isDark ? '#cbd5e1' : '#475569';
     const gridColor = isDark ? 'rgba(51, 65, 85, 0.4)' : 'rgba(226, 232, 240, 0.6)';
 
@@ -1232,7 +1254,6 @@ function renderWaste(container) {
     const pData = APP_STATE.filtered.processed;
     const rData = APP_STATE.filtered.raw_fruit;
 
-    // Point 2: Separate Waste into Cut Fruit, Juice, and Raw Material
     let wCutFruitRp = 0, qCutFruit = 0;
     let wJuiceRp = 0, qJuice = 0;
     let wRawRp = 0, qRaw = 0;
@@ -1243,7 +1264,7 @@ function renderWaste(container) {
         const qtyMusnah = getWasteQty(item);
         const rpMusnah = getWasteRp(item);
         const rpSales = Number(item.RP_SALES || 0);
-        const rpProfit = rpSales - rpMusnah; // Point 2: Rp Sales - Rp Pemusnahan
+        const rpProfit = rpSales - rpMusnah;
 
         const isJuice = isJuiceItem(item);
         if (isJuice) {
@@ -1292,7 +1313,6 @@ function renderWaste(container) {
     const totalWasteRp = wCutFruitRp + wJuiceRp + wRawRp;
     combinedWasteList.sort((a, b) => b.rpMusnah - a.rpMusnah || b.qtyMusnah - a.qtyMusnah);
 
-    // Point 2: KPI Boxes include Juice Waste
     container.innerHTML = `
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-5">
             <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-rose-500 shadow-sm">
@@ -1384,7 +1404,7 @@ function renderWasteCharts(pData, rData) {
         .sort((a, b) => (b.pWaste + b.rWaste) - (a.pWaste + a.rWaste))
         .slice(0, 10);
 
-    const isDark = document.documentElement.classList.contains('dark');
+    const isDark = APP_STATE.isDarkMode;
     const labelColor = isDark ? '#cbd5e1' : '#475569';
     const gridColor = isDark ? 'rgba(51, 65, 85, 0.4)' : 'rgba(226, 232, 240, 0.6)';
 
@@ -1440,43 +1460,41 @@ function renderRepack(container) {
             const procItem = procLookup.get(`${kdStore}___${pluHasil}`);
 
             const sohRaw = Number(rawItem?.QTY_SOH || rawItem?.SOH || 0);
-            const sohProcessed = Number(procItem?.QTY_SOH || procItem?.SOH || 0);
+            // MERUBAH SOURCE DATA SOH HASIL MENJADI JUMLAH QTY REPACKING TOKO
             const qtyRepack = Number(procItem?.QTY_REPACKING_TOKO || procItem?.QTY_REPACK || 0);
             const qtySales = Number(procItem?.QTY_SALES || 0);
 
-            if (sohRaw > 0 || sohProcessed > 0 || qtyRepack > 0 || qtySales > 0) {
-                // Point 3: % Repacking / Sales = (Qty Repack / Qty Sales) * 100
+            if (sohRaw > 0 || qtyRepack > 0 || qtySales > 0) {
                 let ratioRepackSales = qtySales > 0 ? (qtyRepack / qtySales) * 100 : (qtyRepack > 0 ? 100 : 0);
                 repackStoreRows.push({
                     kdStore, storeName, pluAsal,
                     descAsal: m.DESC_ASAL || rawItem?.DESCP || 'Raw Material',
                     sohRaw, pluHasil,
                     descHasil: m.DESC || procItem?.DESCP || 'Hasil Repack',
-                    sohProcessed, qtyRepack, qtySales, ratioRepackSales
+                    qtyRepack, qtySales, ratioRepackSales
                 });
             }
         });
     });
 
     repackStoreRows.sort((a, b) => {
-        const aPriority = (a.sohProcessed === 0 && a.sohRaw > 0) ? 1 : 0;
-        const bPriority = (b.sohProcessed === 0 && b.sohRaw > 0) ? 1 : 0;
+        const aPriority = (a.qtyRepack === 0 && a.sohRaw > 0) ? 1 : 0;
+        const bPriority = (b.qtyRepack === 0 && b.sohRaw > 0) ? 1 : 0;
         if (aPriority !== bPriority) return bPriority - aPriority;
         if (aPriority === 1) return b.sohRaw - a.sohRaw;
         return b.qtyRepack - a.qtyRepack || b.sohRaw - a.sohRaw;
     });
 
     const totalSohRaw = repackStoreRows.reduce((a, b) => a + b.sohRaw, 0);
-    const totalSohProc = repackStoreRows.reduce((a, b) => a + b.sohProcessed, 0);
-    const alertZeroCount = repackStoreRows.filter(r => r.sohProcessed === 0 && r.sohRaw > 0).length;
+    const totalQtyRepack = repackStoreRows.reduce((a, b) => a + b.qtyRepack, 0);
+    const alertZeroCount = repackStoreRows.filter(r => r.qtyRepack === 0 && r.sohRaw > 0).length;
 
-    // Point 3: Added Qty Sales & % Repacking / Sales columns in table
     container.innerHTML = `
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 mb-5">
             <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-l-4 border-l-rose-500 shadow-sm">
                 <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Perlu Repack Segera</span>
                 <h3 class="text-base sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-0.5">${alertZeroCount} Item</h3>
-                <span class="text-[9px] text-slate-400 font-medium block">SOH Hasil = 0</span>
+                <span class="text-[9px] text-slate-400 font-medium block">Qty Repack = 0</span>
             </div>
 
             <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-l-4 border-l-amber-500 shadow-sm">
@@ -1486,9 +1504,9 @@ function renderRepack(container) {
             </div>
 
             <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-l-4 border-l-emerald-500 shadow-sm col-span-2 sm:col-span-1">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">SOH Cut Fruit/Juice</span>
-                <h3 class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">${totalSohProc.toLocaleString('id-ID')}</h3>
-                <span class="text-[9px] text-slate-400 font-medium block">Stok Siap Jual</span>
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Qty Repack</span>
+                <h3 class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">${totalQtyRepack.toLocaleString('id-ID')}</h3>
+                <span class="text-[9px] text-slate-400 font-medium block">Total Repacking Toko</span>
             </div>
         </div>
 
@@ -1506,7 +1524,7 @@ function renderRepack(container) {
                             <th class="px-3 sm:px-5 py-2.5">Raw Item</th>
                             <th class="px-3 sm:px-5 py-2.5 text-right bg-amber-500/10 text-amber-700 dark:text-amber-300">SOH Raw</th>
                             <th class="px-3 sm:px-5 py-2.5">Hasil Repack</th>
-                            <th class="px-3 sm:px-5 py-2.5 text-right bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">SOH Hasil</th>
+                            <th class="px-3 sm:px-5 py-2.5 text-right bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">Qty Repack</th>
                             <th class="px-3 sm:px-5 py-2.5 text-right font-black text-teal-600 dark:text-teal-400">Qty Sales</th>
                             <th class="px-3 sm:px-5 py-2.5 text-center font-black text-indigo-600 dark:text-indigo-400">% Repack / Sales</th>
                         </tr>
@@ -1539,7 +1557,6 @@ function renderSalesTableRows(data) {
     return paginated.map(row => {
         const rpSales = Number(row.RP_SALES || 0);
         const rpMargin = Number(row.RP_MARGIN || row.MARGIN || 0);
-        // Point 1: Calculate % Margin = Rp Margin / Rp Sales
         const pctMargin = rpSales > 0 ? (rpMargin / rpSales) * 100 : 0;
 
         return `
@@ -1609,7 +1626,7 @@ function renderRepackStoreTableRows(data) {
     }
 
     return paginated.map(row => {
-        const isPriorityZero = row.sohProcessed === 0 && row.sohRaw > 0;
+        const isPriorityZero = row.qtyRepack === 0 && row.sohRaw > 0;
         let badgeStyle = '';
         let ratioLabel = '';
 
@@ -1637,7 +1654,7 @@ function renderRepackStoreTableRows(data) {
                     <span class="block text-[9px] text-slate-400 font-normal">PLU: ${row.pluHasil}</span>
                 </td>
                 <td class="px-3 sm:px-5 py-2.5 text-right font-black ${isPriorityZero ? 'text-rose-600 dark:text-rose-400 bg-rose-500/20' : 'text-emerald-700 dark:text-emerald-300'}">
-                    ${row.sohProcessed.toLocaleString('id-ID')}
+                    ${row.qtyRepack.toLocaleString('id-ID')}
                 </td>
                 <td class="px-3 sm:px-5 py-2.5 text-right font-black text-teal-600 dark:text-teal-400">
                     ${row.qtySales.toLocaleString('id-ID')}
@@ -1679,29 +1696,6 @@ window.changeRepackPage = function(delta) {
     }
 };
 
-// Point 4 Fix: Reliable Dark Mode Toggle
-window.toggleDarkMode = function() {
-    APP_STATE.isDarkMode = !APP_STATE.isDarkMode;
-    const htmlEl = document.documentElement;
-    const themeIcon = document.getElementById('theme-icon');
-    const themeLabel = document.getElementById('theme-label');
-
-    if (APP_STATE.isDarkMode) {
-        htmlEl.classList.add('dark');
-        if (themeIcon) themeIcon.innerText = '☀️';
-        if (themeLabel) themeLabel.innerText = 'Mode Terang';
-    } else {
-        htmlEl.classList.remove('dark');
-        if (themeIcon) themeIcon.innerText = '🌙';
-        if (themeLabel) themeLabel.innerText = 'Mode Gelap';
-    }
-    
-    // Re-render chart colors to adapt to active mode
-    if (APP_STATE.activeView) {
-        renderView();
-    }
-};
-
 window.exportToExcel = function() {
     if (!APP_STATE.raw.processed || APP_STATE.raw.processed.length === 0) {
         Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Data belum disinkronkan atau kosong.' });
@@ -1719,6 +1713,7 @@ window.exportToExcel = function() {
 window.recordAcView = recordAcView;
 
 window.onload = async () => {
+    applyDarkModeUI();
     await initCloudSync();
     fetchData();
 };
