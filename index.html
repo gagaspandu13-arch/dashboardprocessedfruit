@@ -166,7 +166,7 @@
                         <span id="theme-label">Mode Gelap</span>
                     </span>
                 </button>
-                <button onclick="openGasModal()" title="Lihat Kode Backend GAS v2.2" class="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700">
+                <button onclick="openGasModal()" title="Lihat Kode Backend GAS v2.3" class="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700">
                     ⚙️ Script
                 </button>
             </div>
@@ -321,7 +321,7 @@
             <div class="flex items-center gap-2">
                 <span class="text-xl">⚙️</span>
                 <div>
-                    <h3 class="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-white">Google Apps Script Backend (v2.2 - Auto Sheet ABSENSI)</h3>
+                    <h3 class="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-white">Google Apps Script Backend (v2.3 - Support TOKO AKTIF JUICE)</h3>
                     <p class="text-[10px] text-slate-400">Salin kode ini ke Apps Script Editor Google Sheet Anda</p>
                 </div>
             </div>
@@ -330,13 +330,14 @@
         <div class="p-3 bg-slate-900 text-slate-200 font-mono text-[11px] overflow-y-auto flex-1 select-all">
             <pre id="gas-script-content">
 /**
- * Cut Fruit & Juice Operational Dashboard - Google Apps Script Backend (v2.2)
- * Includes Automatic Logging to "ABSENSI AC" Sheet
+ * Cut Fruit & Juice Operational Dashboard - Google Apps Script Backend (v2.3)
+ * Includes Automatic Logging to "ABSENSI AC" & Sheet "TOKO AKTIF JUICE" Dynamic Sync
  */
 const SS_CONFIG = {
     SHEET_PROCESSED_NAMES: ["PROCESSED FRUIT", "PROCESSED", "CUT FRUIT", "JUICE"],
     SHEET_RAW_NAMES: ["RAW", "RAW FRUIT", "BAHAN MENTAH", "RAW MATERIAL"],
     SHEET_MAPPING_NAMES: ["MAPPING PLU", "MAPPING", "MAP PLU", "PLU MAPPING"],
+    SHEET_JUICE_ACTIVE: ["TOKO AKTIF JUICE", "AKTIF JUICE", "JUICE AKTIF"],
     SHEET_ABSENSI_AC: "ABSENSI AC",
     SHEET_CACHE: "_SUMMARY_CACHE_",
     CHUNK_SIZE: 35000
@@ -346,7 +347,6 @@ function doGet(e) {
     try {
         const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-        // Handle AC Attendance Logging via GET or POST
         if (e && e.parameter && e.parameter.action === "absen_ac") {
             return recordAcAttendance(e.parameter.acName);
         }
@@ -430,7 +430,7 @@ function recordAcAttendance(acName) {
             </pre>
         </div>
         <div class="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex items-center justify-between">
-            <span class="text-[10px] text-slate-400">v2.2 Backend Protocol (Auto Auto-Append ABSENSI AC)</span>
+            <span class="text-[10px] text-slate-400">v2.3 Backend Protocol (Auto Auto-Append ABSENSI AC & TOKO AKTIF JUICE)</span>
             <div class="flex items-center gap-2">
                 <button onclick="copyGasScript()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-sm transition-all">📋 Salin Script</button>
                 <button onclick="closeGasModal()" class="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs px-4 py-2 rounded-xl">Tutup</button>
@@ -449,7 +449,7 @@ function recordAcAttendance(acName) {
     window.copyGasScript = function() {
         const text = document.getElementById('gas-script-content').innerText;
         navigator.clipboard.writeText(text).then(() => {
-            Swal.fire({ icon: 'success', title: 'Kode Disalin!', text: 'Kode GAS v2.2 berhasil disalin ke clipboard.', timer: 2000, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: 'Kode Disalin!', text: 'Kode GAS v2.3 berhasil disalin ke clipboard.', timer: 2000, showConfirmButton: false });
         });
     };
 
@@ -475,7 +475,6 @@ const CONFIG = {
     PAGES: ['sales', 'waste', 'repack']
 };
 
-// Check local storage for dark mode preference or system setting
 const savedTheme = localStorage.getItem('theme');
 const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 const initialDarkMode = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
@@ -484,7 +483,7 @@ const APP_STATE = {
     activeView: 'sales',
     isDarkMode: initialDarkMode,
     apiUrl: localStorage.getItem('GAS_API_URL') || CONFIG.DEFAULT_API_URL,
-    raw: { processed: [], raw_fruit: [], mapping: [] },
+    raw: { processed: [], raw_fruit: [], mapping: [], juice_active_stores: [] },
     filtered: { processed: [], raw_fruit: [] },
     filters: { am: 'ALL', ac: 'ALL', store: 'ALL', search: '' },
     sort: { key: 'RP_SALES', dir: 'desc' },
@@ -494,6 +493,7 @@ const APP_STATE = {
     lastUpdatedTimestamp: null,
     db: null,
     auth: null,
+    activeJuiceStoresSet: new Set(),
     appId: typeof __app_id !== 'undefined' ? __app_id : 'cut-fruit-operational-dashboard'
 };
 
@@ -525,7 +525,49 @@ window.toggleDarkMode = function() {
     }
 };
 
+function getTodayKey() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function loadLocalAcLogs() {
+    const today = getTodayKey();
+    try {
+        const storedStr = localStorage.getItem('AC_ATTENDANCE_CACHE');
+        if (storedStr) {
+            const parsed = JSON.parse(storedStr);
+            if (parsed && parsed.date === today && parsed.logs) {
+                APP_STATE.acViewLogs = parsed.logs;
+                return;
+            }
+        }
+    } catch (e) {
+        console.warn("Gagal membaca cache lokal absensi:", e);
+    }
+    APP_STATE.acViewLogs = {};
+    saveLocalAcLogs();
+}
+
+function saveLocalAcLogs() {
+    const today = getTodayKey();
+    try {
+        const payload = {
+            date: today,
+            logs: APP_STATE.acViewLogs
+        };
+        localStorage.setItem('AC_ATTENDANCE_CACHE', JSON.stringify(payload));
+    } catch (e) {
+        console.warn("Gagal menyimpan absensi ke cache lokal:", e);
+    }
+}
+
 async function initCloudSync() {
+    loadLocalAcLogs();
+    updateAcHeaderBadge();
+
     try {
         if (typeof __firebase_config !== 'undefined' && __firebase_config) {
             const { initializeApp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
@@ -548,9 +590,9 @@ async function initCloudSync() {
 
             onSnapshot(attendanceDocRef, (snapshot) => {
                 if (snapshot.exists()) {
-                    APP_STATE.acViewLogs = snapshot.data().logs || {};
-                } else {
-                    APP_STATE.acViewLogs = {};
+                    const cloudLogs = snapshot.data().logs || {};
+                    APP_STATE.acViewLogs = { ...APP_STATE.acViewLogs, ...cloudLogs };
+                    saveLocalAcLogs();
                 }
                 updateAcHeaderBadge();
                 const acModal = document.getElementById('modal-ac-status');
@@ -566,20 +608,15 @@ async function initCloudSync() {
     }
 }
 
-function getTodayKey() {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
 async function recordAcView(acName) {
     if (!acName || acName === 'ALL') return;
     const today = getTodayKey();
     const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     
+    loadLocalAcLogs();
+
     APP_STATE.acViewLogs[acName] = timeStr;
+    saveLocalAcLogs();
     updateAcHeaderBadge();
 
     try {
@@ -612,6 +649,7 @@ function getAllAcList() {
 }
 
 function updateAcHeaderBadge() {
+    loadLocalAcLogs();
     const allAcs = getAllAcList();
     let seenCount = 0;
     allAcs.forEach(ac => {
@@ -650,7 +688,7 @@ window.checkInCurrentAc = function() {
             Swal.fire({
                 icon: 'success',
                 title: 'Presensi Ter-Sync!',
-                text: `${res.value} berhasil dicatat & dikirim ke Sheet ABSENSI AC.`,
+                text: `${res.value} berhasil dicatat & tersimpan untuk hari ini.`,
                 toast: true,
                 position: 'top-end',
                 timer: 3500,
@@ -661,6 +699,7 @@ window.checkInCurrentAc = function() {
 };
 
 window.openAcStatusModal = function() {
+    loadLocalAcLogs();
     renderAcStatusList();
     document.getElementById('modal-ac-status').classList.remove('hidden');
 };
@@ -670,6 +709,7 @@ window.closeAcStatusModal = function() {
 };
 
 function renderAcStatusList() {
+    loadLocalAcLogs();
     const allAcs = getAllAcList();
     const container = document.getElementById('ac-status-list');
 
@@ -719,10 +759,49 @@ function renderAcStatusList() {
     updateAcHeaderBadge();
 }
 
+// Check strictly if item contains "JUICE" or "JUS"
 function isJuiceItem(item) {
     if (!item) return false;
     const desc = String(item.DESCP || item.DESC || item.PLU || '').toUpperCase();
-    return desc.includes('JUICE') || desc.includes('JUS') || desc.includes('DRINK') || desc.includes('BEVERAGE');
+    return desc.includes('JUICE') || desc.includes('JUS');
+}
+
+// Check strictly if item contains "CF" or "CUT FRUIT"
+function isCutFruitItem(item) {
+    if (!item) return false;
+    const desc = String(item.DESCP || item.DESC || item.PLU || '').toUpperCase();
+    return desc.includes('CF') || desc.includes('CUT FRUIT') || desc.includes('CUT-FRUIT');
+}
+
+// Strict filter function: Item must contain CF or JUICE to be included in Sales Performance
+function isCfOrJuiceItem(item) {
+    return isCutFruitItem(item) || isJuiceItem(item);
+}
+
+/**
+ * Check if store code is listed under the 60 Active Juice Stores sheet ("TOKO AKTIF JUICE")
+ */
+function isStoreJuiceActive(kdStore) {
+    if (!kdStore) return false;
+    const cleanKd = String(kdStore).trim().toUpperCase();
+    if (APP_STATE.activeJuiceStoresSet.size === 0) {
+        // Fallback or dynamic check: If a store has Juice sales or repacking recorded, consider active
+        return true;
+    }
+    return APP_STATE.activeJuiceStoresSet.has(cleanKd);
+}
+
+/**
+ * Returns HTML badge indicating "Aktif Juice" or "Tidak Aktif Juice"
+ */
+function getJuiceStatusBadge(kdStore, item) {
+    if (isJuiceItem(item)) {
+        if (!isStoreJuiceActive(kdStore)) {
+            return `<span class="inline-block px-1.5 py-0.5 rounded text-[8px] font-black bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700">Tidak Aktif Juice</span>`;
+        }
+        return `<span class="inline-block px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">Aktif Juice</span>`;
+    }
+    return '';
 }
 
 function parseIndonesianNumber(val) {
@@ -767,6 +846,8 @@ function parseCompactPayload(compactObj) {
 
 function enrichRawDataWithMetadata() {
     const storeMap = {};
+    const juiceActiveSet = new Set();
+
     APP_STATE.raw.processed.forEach(item => {
         if (item.KD_STORE && !storeMap[item.KD_STORE]) {
             storeMap[item.KD_STORE] = {
@@ -774,6 +855,10 @@ function enrichRawDataWithMetadata() {
                 AC: item.AC || '',
                 NAMA_STORE: item.NAMA_STORE || item.KD_STORE
             };
+        }
+        // Auto register store if it actively has Juice items
+        if (item.KD_STORE && isJuiceItem(item) && Number(item.RP_SALES || 0) > 0) {
+            juiceActiveSet.add(String(item.KD_STORE).trim().toUpperCase());
         }
     });
 
@@ -786,6 +871,16 @@ function enrichRawDataWithMetadata() {
             }
         }
     });
+
+    // Populate active juice stores set
+    if (APP_STATE.raw.juice_active_stores && APP_STATE.raw.juice_active_stores.length > 0) {
+        APP_STATE.raw.juice_active_stores.forEach(st => {
+            const code = typeof st === 'object' ? (st.KD_STORE || st.STORE || st.KODE || '') : st;
+            if (code) juiceActiveSet.add(String(code).trim().toUpperCase());
+        });
+    }
+
+    APP_STATE.activeJuiceStoresSet = juiceActiveSet;
 }
 
 function getWasteQty(item) {
@@ -854,6 +949,9 @@ window.fetchData = async function(forceRefresh = false) {
             APP_STATE.raw.processed = parseCompactPayload(result.data.processed);
             APP_STATE.raw.raw_fruit = parseCompactPayload(result.data.raw);
             APP_STATE.raw.mapping = parseCompactPayload(result.data.mapping);
+            if (result.data.juice_stores) {
+                APP_STATE.raw.juice_active_stores = parseCompactPayload(result.data.juice_stores);
+            }
 
             enrichRawDataWithMetadata();
 
@@ -964,7 +1062,16 @@ function updateStoreDropdown() {
 
     const selStore = document.getElementById('sel-store');
     const curStore = selStore.value;
-    selStore.innerHTML = '<option value="ALL">Semua Toko</option>' + Array.from(storeMap.entries()).sort((a,b) => a[1].localeCompare(b[1])).map(([kd, name]) => `<option value="${kd}">${name} (${kd})</option>`).join('');
+    
+    const storeOptionsHtml = Array.from(storeMap.entries())
+        .sort((a,b) => a[1].localeCompare(b[1]))
+        .map(([kd, name]) => {
+            const isJuiceActive = isStoreJuiceActive(kd);
+            const activeTag = isJuiceActive ? '' : ' [Tidak Aktif Juice]';
+            return `<option value="${kd}">${name} (${kd})${activeTag}</option>`;
+        }).join('');
+
+    selStore.innerHTML = '<option value="ALL">Semua Toko</option>' + storeOptionsHtml;
     selStore.value = storeMap.has(curStore) ? curStore : 'ALL';
 }
 
@@ -1068,7 +1175,9 @@ function renderView() {
 }
 
 function renderSales(container) {
-    const pData = APP_STATE.filtered.processed.sort((a, b) => Number(b.RP_SALES || 0) - Number(a.RP_SALES || 0));
+    const pData = APP_STATE.filtered.processed
+        .filter(isCfOrJuiceItem)
+        .sort((a, b) => Number(b.RP_SALES || 0) - Number(a.RP_SALES || 0));
     
     let totalSalesRp = 0, totalQtySales = 0;
     let cutFruitRp = 0, cutFruitQty = 0;
@@ -1083,18 +1192,20 @@ function renderSales(container) {
         if (isJuiceItem(item)) {
             juiceRp += rp;
             juiceQty += qty;
-        } else {
+        } else if (isCutFruitItem(item)) {
             cutFruitRp += rp;
             cutFruitQty += qty;
         }
     });
 
-    const activeStoresCount = new Set(pData.map(x => x.KD_STORE).filter(Boolean)).size;
+    const allStoresList = pData.map(x => x.KD_STORE).filter(Boolean);
+    const activeStoresCount = new Set(allStoresList).size;
+    const activeJuiceStoresCount = new Set(allStoresList.filter(kd => isStoreJuiceActive(kd))).size;
 
     container.innerHTML = `
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-5">
             <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-emerald-500 shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Sales</span>
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Sales (CF & Juice)</span>
                 <h3 class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">${formatRupiah(totalSalesRp)}</h3>
                 <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">${totalQtySales.toLocaleString('id-ID')} Pcs Total</p>
             </div>
@@ -1114,7 +1225,7 @@ function renderSales(container) {
             <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-indigo-500 shadow-sm">
                 <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Toko Aktif</span>
                 <h3 class="text-base sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5">${activeStoresCount} Toko</h3>
-                <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">Berpenjualan</p>
+                <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">(${activeJuiceStoresCount} Aktif Juice)</p>
             </div>
         </div>
 
@@ -1122,7 +1233,7 @@ function renderSales(container) {
             <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div class="flex items-center justify-between mb-3">
                     <h4 class="font-black text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">
-                        🏪 Top 10 Toko Penjualan Terbesar
+                        🏪 Top 10 Toko Penjualan CF & Juice
                     </h4>
                 </div>
                 <div class="chart-container"><canvas id="chart-top-stores"></canvas></div>
@@ -1131,7 +1242,7 @@ function renderSales(container) {
             <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div class="flex items-center justify-between mb-3">
                     <h4 class="font-black text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">
-                        🍹 Top 10 Produk Terlaris
+                        🍹 Top 10 Produk Terlaris (CF & Juice)
                     </h4>
                 </div>
                 <div class="chart-container"><canvas id="chart-top-products"></canvas></div>
@@ -1140,7 +1251,7 @@ function renderSales(container) {
 
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
             <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Rincian Penjualan Produk</h4>
+                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Rincian Penjualan Produk CF & JUICE</h4>
                 <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full">${pData.length} Item</span>
             </div>
 
@@ -1150,6 +1261,7 @@ function renderSales(container) {
                         <tr>
                             <th class="px-3 sm:px-5 py-2.5">Toko</th>
                             <th class="px-3 sm:px-5 py-2.5">PLU & Produk</th>
+                            <th class="px-3 sm:px-5 py-2.5 text-center">Status Juice</th>
                             <th class="px-3 sm:px-5 py-2.5 text-right">Qty</th>
                             <th class="px-3 sm:px-5 py-2.5 text-right bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">Rp Sales ⬇</th>
                             <th class="px-3 sm:px-5 py-2.5 text-right">Rp Margin</th>
@@ -1284,7 +1396,8 @@ function renderWaste(container) {
             qtyMusnah, 
             rpMusnah, 
             rpSales,
-            rpProfit 
+            rpProfit,
+            itemRef: item
         });
     });
 
@@ -1306,7 +1419,8 @@ function renderWaste(container) {
             qtyMusnah, 
             rpMusnah, 
             rpSales,
-            rpProfit 
+            rpProfit,
+            itemRef: item
         });
     });
 
@@ -1460,7 +1574,6 @@ function renderRepack(container) {
             const procItem = procLookup.get(`${kdStore}___${pluHasil}`);
 
             const sohRaw = Number(rawItem?.QTY_SOH || rawItem?.SOH || 0);
-            // MERUBAH SOURCE DATA SOH HASIL MENJADI JUMLAH QTY REPACKING TOKO
             const qtyRepack = Number(procItem?.QTY_REPACKING_TOKO || procItem?.QTY_REPACK || 0);
             const qtySales = Number(procItem?.QTY_SALES || 0);
 
@@ -1471,7 +1584,8 @@ function renderRepack(container) {
                     descAsal: m.DESC_ASAL || rawItem?.DESCP || 'Raw Material',
                     sohRaw, pluHasil,
                     descHasil: m.DESC || procItem?.DESCP || 'Hasil Repack',
-                    qtyRepack, qtySales, ratioRepackSales
+                    qtyRepack, qtySales, ratioRepackSales,
+                    procItem
                 });
             }
         });
@@ -1551,13 +1665,26 @@ function renderSalesTableRows(data) {
     const paginated = data.slice(start, start + APP_STATE.pagination.limit);
 
     if (paginated.length === 0) {
-        return `<tr><td colspan="6" class="text-center py-6 text-slate-400">Tidak ada data ditemukan</td></tr>`;
+        return `<tr><td colspan="7" class="text-center py-6 text-slate-400">Tidak ada data CF & Juice ditemukan</td></tr>`;
     }
 
     return paginated.map(row => {
         const rpSales = Number(row.RP_SALES || 0);
         const rpMargin = Number(row.RP_MARGIN || row.MARGIN || 0);
         const pctMargin = rpSales > 0 ? (rpMargin / rpSales) * 100 : 0;
+        const isJuice = isJuiceItem(row);
+        const isStoreJuice = isStoreJuiceActive(row.KD_STORE);
+
+        let statusJuiceHtml = '';
+        if (isJuice) {
+            if (!isStoreJuice) {
+                statusJuiceHtml = `<span class="inline-block px-2 py-0.5 rounded text-[9px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">Tidak Aktif Juice</span>`;
+            } else {
+                statusJuiceHtml = `<span class="inline-block px-2 py-0.5 rounded text-[9px] font-black bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">Aktif Juice</span>`;
+            }
+        } else {
+            statusJuiceHtml = `<span class="inline-block px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">Cut Fruit</span>`;
+        }
 
         return `
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
@@ -1568,6 +1695,9 @@ function renderSalesTableRows(data) {
                 <td class="px-3 sm:px-5 py-2.5">
                     <p class="font-medium text-slate-800 dark:text-slate-200 leading-tight">${row.DESCP || '-'}</p>
                     <span class="text-[9px] text-slate-400">PLU: ${row.PLU || '-'}</span>
+                </td>
+                <td class="px-3 sm:px-5 py-2.5 text-center">
+                    ${statusJuiceHtml}
                 </td>
                 <td class="px-3 sm:px-5 py-2.5 text-right font-semibold">${Number(row.QTY_SALES || 0).toLocaleString('id-ID')}</td>
                 <td class="px-3 sm:px-5 py-2.5 text-right font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50/20 dark:bg-emerald-950/10">Rp ${rpSales.toLocaleString('id-ID')}</td>
@@ -1588,6 +1718,20 @@ function renderWasteTableRows(data) {
 
     return paginated.map(row => {
         const profitClass = row.rpProfit < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400';
+        const isJuice = row.type === 'JUICE';
+        const isStoreJuice = isStoreJuiceActive(row.kdStore);
+
+        let typeBadgeHtml = '';
+        if (isJuice && !isStoreJuice) {
+            typeBadgeHtml = `<span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200">JUICE (Tidak Aktif Juice)</span>`;
+        } else if (isJuice) {
+            typeBadgeHtml = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-400">JUICE</span>`;
+        } else if (row.type === 'CUT FRUIT') {
+            typeBadgeHtml = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400">CUT FRUIT</span>`;
+        } else {
+            typeBadgeHtml = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400">RAW FRUIT</span>`;
+        }
+
         return `
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                 <td class="px-3 sm:px-5 py-2.5 font-bold text-slate-700 dark:text-slate-300">
@@ -1599,9 +1743,7 @@ function renderWasteTableRows(data) {
                     <span class="text-[9px] text-slate-400">PLU: ${row.plu}</span>
                 </td>
                 <td class="px-3 sm:px-5 py-2.5 text-center">
-                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${row.type === 'JUICE' ? 'bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-400' : (row.type === 'CUT FRUIT' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400')}">
-                        ${row.type}
-                    </span>
+                    ${typeBadgeHtml}
                 </td>
                 <td class="px-3 sm:px-5 py-2.5 text-right font-black text-rose-600 dark:text-rose-400 bg-rose-50/20 dark:bg-rose-950/10">
                     Rp ${row.rpMusnah.toLocaleString('id-ID')}
@@ -1638,11 +1780,19 @@ function renderRepackStoreTableRows(data) {
             badgeStyle = 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 font-extrabold';
         }
 
+        const isJuice = isJuiceItem(row.procItem);
+        const isStoreJuice = isStoreJuiceActive(row.kdStore);
+        let juiceStatusTag = '';
+        if (isJuice && !isStoreJuice) {
+            juiceStatusTag = `<span class="block text-[8px] font-bold text-amber-600 dark:text-amber-400">⚠️ Toko Tidak Aktif Juice</span>`;
+        }
+
         return `
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors ${isPriorityZero ? 'bg-rose-500/5 dark:bg-rose-950/20' : ''}">
                 <td class="px-3 sm:px-5 py-2.5 font-bold text-slate-800 dark:text-slate-200">
                     ${row.storeName}
                     <span class="block text-[9px] text-slate-400 font-semibold">${row.kdStore}</span>
+                    ${juiceStatusTag}
                 </td>
                 <td class="px-3 sm:px-5 py-2.5 font-semibold text-amber-600 dark:text-amber-400">
                     ${row.descAsal}
@@ -1670,7 +1820,8 @@ function renderRepackStoreTableRows(data) {
 }
 
 window.changePage = function(delta) {
-    const maxPage = Math.ceil(APP_STATE.filtered.processed.length / APP_STATE.pagination.limit) || 1;
+    const cfJuiceData = APP_STATE.filtered.processed.filter(isCfOrJuiceItem);
+    const maxPage = Math.ceil(cfJuiceData.length / APP_STATE.pagination.limit) || 1;
     const newPage = APP_STATE.pagination.page + delta;
     if (newPage >= 1 && newPage <= maxPage) {
         APP_STATE.pagination.page = newPage;
@@ -1703,7 +1854,12 @@ window.exportToExcel = function() {
     }
 
     const wb = XLSX.utils.book_new();
-    const wsProcessed = XLSX.utils.json_to_sheet(APP_STATE.filtered.processed);
+    const salesOnly = APP_STATE.filtered.processed.filter(isCfOrJuiceItem).map(item => ({
+        ...item,
+        STATUS_JUICE: isJuiceItem(item) ? (isStoreJuiceActive(item.KD_STORE) ? 'Aktif Juice' : 'Tidak Aktif Juice') : 'Cut Fruit'
+    }));
+
+    const wsProcessed = XLSX.utils.json_to_sheet(salesOnly);
     XLSX.utils.book_append_sheet(wb, wsProcessed, "Cut Fruit & Juice");
     const wsRaw = XLSX.utils.json_to_sheet(APP_STATE.filtered.raw_fruit);
     XLSX.utils.book_append_sheet(wb, wsRaw, "Raw Fruit");
@@ -1714,6 +1870,7 @@ window.recordAcView = recordAcView;
 
 window.onload = async () => {
     applyDarkModeUI();
+    loadLocalAcLogs();
     await initCloudSync();
     fetchData();
 };
