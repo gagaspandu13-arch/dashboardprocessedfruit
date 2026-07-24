@@ -1923,8 +1923,8 @@ function renderRepack(container) {
     // Apply interactive column sort for Repack table
     repackStoreRows = sortDataset(repackStoreRows, APP_STATE.sort.repack);
 
-    const totalSohRaw = repackStoreRows.reduce((a, b) => a + b.sohRaw, 0);
-    const totalQtyRepack = repackStoreRows.reduce((a, b) => a + b.qtyRepack, 0);
+    const totalSohRaw = rawList.reduce((a, b) => a + parseIndonesianNumber(b.OHTOKO ?? 0), 0);
+    const totalQtyRepack = processedList.reduce((a, b) => a + parseIndonesianNumber(b.QTY_REPACKING_TOKO ?? 0), 0);
     const alertZeroCount = repackStoreRows.filter(r => r.qtyRepack === 0 && r.sohRaw > 0).length;
 
     container.innerHTML = `
