@@ -152,6 +152,12 @@
                     <span class="text-lg">⚖️</span>
                     <span>Koreksi Buah Sayur</span>
                 </button>
+
+                <!-- Menu Baru: Buah Diskon -->
+                <button id="nav-discount" onclick="switchView('discount')" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-left">
+                    <span class="text-lg">🏷️</span>
+                    <span>Sales Buah Diskon</span>
+                </button>
             </nav>
         </div>
 
@@ -181,7 +187,7 @@
                         <span id="theme-label">Mode Gelap</span>
                     </span>
                 </button>
-                <button onclick="openGasModal()" title="Lihat Kode Backend GAS v2.3" class="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700">
+                <button onclick="openGasModal()" title="Lihat Kode Backend GAS v2.4" class="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700">
                     ⚙️ Script
                 </button>
             </div>
@@ -276,26 +282,30 @@
 </div>
 
 <!-- Mobile Bottom Navigation -->
-<nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 px-2 py-1.5 shadow-lg flex items-center justify-around no-print">
-    <button id="bnav-sales" onclick="switchView('sales')" class="flex flex-col items-center py-1 px-2.5 rounded-xl transition-all bottom-nav-active">
-        <span class="text-lg leading-none">📊</span>
-        <span class="text-[9px] mt-1">Sales</span>
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 px-1 py-1.5 shadow-lg flex items-center justify-around no-print">
+    <button id="bnav-sales" onclick="switchView('sales')" class="flex flex-col items-center py-1 px-1.5 rounded-xl transition-all bottom-nav-active">
+        <span class="text-base leading-none">📊</span>
+        <span class="text-[8px] mt-1">Sales</span>
     </button>
-    <button id="bnav-waste" onclick="switchView('waste')" class="flex flex-col items-center py-1 px-2.5 rounded-xl transition-all text-slate-400">
-        <span class="text-lg leading-none">🗑️</span>
-        <span class="text-[9px] mt-1">Waste</span>
+    <button id="bnav-waste" onclick="switchView('waste')" class="flex flex-col items-center py-1 px-1.5 rounded-xl transition-all text-slate-400">
+        <span class="text-base leading-none">🗑️</span>
+        <span class="text-[8px] mt-1">Waste</span>
     </button>
-    <button id="bnav-repack" onclick="switchView('repack')" class="flex flex-col items-center py-1 px-2.5 rounded-xl transition-all text-slate-400">
-        <span class="text-lg leading-none">🔄</span>
-        <span class="text-[9px] mt-1">Repack</span>
+    <button id="bnav-repack" onclick="switchView('repack')" class="flex flex-col items-center py-1 px-1.5 rounded-xl transition-all text-slate-400">
+        <span class="text-base leading-none">🔄</span>
+        <span class="text-[8px] mt-1">Repack</span>
     </button>
-    <button id="bnav-koreksi" onclick="switchView('koreksi')" class="flex flex-col items-center py-1 px-2.5 rounded-xl transition-all text-slate-400">
-        <span class="text-lg leading-none">⚖️</span>
-        <span class="text-[9px] mt-1">Koreksi</span>
+    <button id="bnav-koreksi" onclick="switchView('koreksi')" class="flex flex-col items-center py-1 px-1.5 rounded-xl transition-all text-slate-400">
+        <span class="text-base leading-none">⚖️</span>
+        <span class="text-[8px] mt-1">Koreksi</span>
     </button>
-    <button onclick="openAcStatusModal()" class="flex flex-col items-center py-1 px-2.5 rounded-xl transition-all text-indigo-500 font-bold">
-        <span class="text-lg leading-none">👁️</span>
-        <span class="text-[9px] mt-1">Absensi</span>
+    <button id="bnav-discount" onclick="switchView('discount')" class="flex flex-col items-center py-1 px-1.5 rounded-xl transition-all text-slate-400">
+        <span class="text-base leading-none">🏷️</span>
+        <span class="text-[8px] mt-1">Diskon</span>
+    </button>
+    <button onclick="openAcStatusModal()" class="flex flex-col items-center py-1 px-1.5 rounded-xl transition-all text-indigo-500 font-bold">
+        <span class="text-base leading-none">👁️</span>
+        <span class="text-[8px] mt-1">Absensi</span>
     </button>
 </nav>
 
@@ -341,7 +351,7 @@
             <div class="flex items-center gap-2">
                 <span class="text-xl">⚙️</span>
                 <div>
-                    <h3 class="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-white">Google Apps Script Backend (v2.3 - Support TOKO AKTIF JUICE & KOREKSI)</h3>
+                    <h3 class="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-white">Google Apps Script Backend (v2.4 - Support BUAH DISKON)</h3>
                     <p class="text-[10px] text-slate-400">Salin kode ini ke Apps Script Editor Google Sheet Anda</p>
                 </div>
             </div>
@@ -350,14 +360,15 @@
         <div class="p-3 bg-slate-900 text-slate-200 font-mono text-[11px] overflow-y-auto flex-1 select-all">
             <pre id="gas-script-content">
 /**
- * Cut Fruit & Juice Operational Dashboard - Google Apps Script Backend (v2.3)
- * Includes Automatic Logging to "ABSENSI AC" & Sheet "TOKO AKTIF JUICE" Dynamic Sync
+ * Cut Fruit & Juice Operational Dashboard - Google Apps Script Backend (v2.4)
+ * Includes Automatic Logging to "ABSENSI AC", "TOKO AKTIF JUICE", & "PLU BUAH DISKON" Dynamic Sync
  */
 const SS_CONFIG = {
     SHEET_PROCESSED_NAMES: ["PROCESSED FRUIT", "PROCESSED", "CUT FRUIT", "JUICE"],
     SHEET_RAW_NAMES: ["RAW", "RAW FRUIT", "BAHAN MENTAH", "RAW MATERIAL"],
     SHEET_MAPPING_NAMES: ["MAPPING PLU", "MAPPING", "MAP PLU", "PLU MAPPING"],
     SHEET_JUICE_ACTIVE: ["TOKO AKTIF JUICE", "AKTIF JUICE", "JUICE AKTIF"],
+    SHEET_DISCOUNT_FRUIT: ["PLU BUAH DISKON", "BUAH DISKON", "DISCOUNT FRUIT"],
     SHEET_ABSENSI_AC: "ABSENSI AC",
     SHEET_CACHE: "_SUMMARY_CACHE_",
     CHUNK_SIZE: 35000
@@ -450,7 +461,7 @@ function recordAcAttendance(acName) {
             </pre>
         </div>
         <div class="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex items-center justify-between">
-            <span class="text-[10px] text-slate-400">v2.3 Backend Protocol (Auto Auto-Append ABSENSI AC & TOKO AKTIF JUICE)</span>
+            <span class="text-[10px] text-slate-400">v2.4 Backend Protocol (Auto Auto-Append ABSENSI AC, TOKO AKTIF JUICE & BUAH DISKON)</span>
             <div class="flex items-center gap-2">
                 <button onclick="copyGasScript()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-sm transition-all">📋 Salin Script</button>
                 <button onclick="closeGasModal()" class="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs px-4 py-2 rounded-xl">Tutup</button>
@@ -469,7 +480,7 @@ function recordAcAttendance(acName) {
     window.copyGasScript = function() {
         const text = document.getElementById('gas-script-content').innerText;
         navigator.clipboard.writeText(text).then(() => {
-            Swal.fire({ icon: 'success', title: 'Kode Disalin!', text: 'Kode GAS v2.3 berhasil disalin ke clipboard.', timer: 2000, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: 'Kode Disalin!', text: 'Kode GAS v2.4 berhasil disalin ke clipboard.', timer: 2000, showConfirmButton: false });
         });
     };
 
@@ -493,7 +504,7 @@ function recordAcAttendance(acName) {
 const CONFIG = {
     DEFAULT_API_URL: "https://script.google.com/macros/s/AKfycbzdBIgS4S2AbiNy_OYLllzN5ur5JxtzjdXG9iZhtKI_3h6oVnqcITC9JS8FNR6Z-PAi/exec",
     KOREKSI_API_URL: "https://script.google.com/macros/s/AKfycbzKJtV8gkfLVa3C152Se0hmIKE2yUWc0peVqzAL-wNBV5sA59qAR9LdpWAhAsV6Xj-q/exec",
-    PAGES: ['sales', 'waste', 'repack', 'koreksi']
+    PAGES: ['sales', 'waste', 'repack', 'koreksi', 'discount']
 };
 
 const savedTheme = localStorage.getItem('theme');
@@ -505,7 +516,7 @@ const APP_STATE = {
     isDarkMode: initialDarkMode,
     apiUrl: localStorage.getItem('GAS_API_URL') || CONFIG.DEFAULT_API_URL,
     koreksiApiUrl: CONFIG.KOREKSI_API_URL,
-    raw: { processed: [], raw_fruit: [], mapping: [], juice_active_stores: [], koreksi: [] },
+    raw: { processed: [], raw_fruit: [], mapping: [], juice_active_stores: [], koreksi: [], discount_fruit_mapping: [] },
     filtered: { processed: [], raw_fruit: [], koreksi: [] },
     filters: { am: 'ALL', ac: 'ALL', store: 'ALL', search: '' },
     // Interactive sorting states for each section
@@ -513,15 +524,17 @@ const APP_STATE = {
         sales: { key: 'RP_SALES', dir: 'desc' },
         waste: { key: 'rpMusnah', dir: 'desc' },
         repack: { key: 'qtyRepack', dir: 'desc' },
-        koreksi: { key: 'RP_KOREKSI', dir: 'desc' }
+        koreksi: { key: 'RP_KOREKSI', dir: 'desc' },
+        discount: { key: 'RP_SALES', dir: 'desc' }
     },
-    pagination: { page: 1, wastePage: 1, repackPage: 1, koreksiPage: 1, limit: 25 },
+    pagination: { page: 1, wastePage: 1, repackPage: 1, koreksiPage: 1, discountPage: 1, limit: 25 },
     chartInstances: {},
     acViewLogs: {},
     lastUpdatedTimestamp: null,
     db: null,
     auth: null,
     activeJuiceStoresSet: new Set(),
+    discountFruitPluMap: new Map(),
     appId: typeof __app_id !== 'undefined' ? __app_id : 'cut-fruit-operational-dashboard'
 };
 
@@ -812,6 +825,20 @@ function isStoreJuiceActive(kdStore) {
     return APP_STATE.activeJuiceStoresSet.has(cleanKd);
 }
 
+// Rule untuk mencocokkan item Buah Diskon
+function isDiscountFruitItem(item) {
+    if (!item) return false;
+    const plu = String(item.PLU || '').trim();
+    const desc = String(item.DESCP || item.DESC || item.NAMA_BARANG || '').toUpperCase();
+    const ket = String(item.KET || item.KETERANGAN || '').toUpperCase();
+
+    if (APP_STATE.discountFruitPluMap.size > 0 && plu) {
+        if (APP_STATE.discountFruitPluMap.has(plu)) return true;
+    }
+
+    return desc.includes('DISC') || ket.includes('DISC') || desc.includes('DISKON') || ket.includes('DISKON');
+}
+
 function parseIndonesianNumber(val) {
     if (val === null || val === undefined || val === '' || val === '-') return 0;
     if (typeof val === 'number') return isNaN(val) ? 0 : val;
@@ -878,7 +905,7 @@ function parseKoreksiPayload(rawResult) {
         const am = item.AM || '';
         const ac = item.AC || '';
         
-        // Preserve SIGNED numbers (Do NOT use Math.abs unconditionally)
+        // Preserve SIGNED numbers
         const qtyKoreksi = parseIndonesianNumber(item.QTY_KOREKSI ?? item.QTY ?? item.KOREKSI_QTY ?? item.TOTAL_QTY ?? 0);
         const rpKoreksi = parseIndonesianNumber(item.RP_KOREKSI ?? item.RP ?? item.TOTAL_KOREKSI ?? item.NILAI_KOREKSI ?? item.KOREKSI_RP ?? 0);
 
@@ -911,6 +938,7 @@ function parseKoreksiPayload(rawResult) {
 function enrichRawDataWithMetadata() {
     const storeMap = {};
     const juiceActiveSet = new Set();
+    const discountPluMap = new Map();
 
     APP_STATE.raw.processed.forEach(item => {
         if (item.KD_STORE && !storeMap[item.KD_STORE]) {
@@ -942,7 +970,20 @@ function enrichRawDataWithMetadata() {
         });
     }
 
+    if (APP_STATE.raw.discount_fruit_mapping && APP_STATE.raw.discount_fruit_mapping.length > 0) {
+        APP_STATE.raw.discount_fruit_mapping.forEach(d => {
+            const plu = String(d.PLU || d.KODE || '').trim();
+            if (plu) {
+                discountPluMap.set(plu, {
+                    DESCP: d.DESCP || d.DESC || '',
+                    KET: d.KET || d.KETERANGAN || 'DISCOUNT FRUIT'
+                });
+            }
+        });
+    }
+
     APP_STATE.activeJuiceStoresSet = juiceActiveSet;
+    APP_STATE.discountFruitPluMap = discountPluMap;
 }
 
 function getWasteQty(item) {
@@ -1049,6 +1090,9 @@ window.fetchData = async function(forceRefresh = false, silent = false) {
             if (resMain.data.juice_stores) {
                 APP_STATE.raw.juice_active_stores = parseCompactPayload(resMain.data.juice_stores);
             }
+            if (resMain.data.discount_fruit) {
+                APP_STATE.raw.discount_fruit_mapping = parseCompactPayload(resMain.data.discount_fruit);
+            }
 
             if (resKoreksi) {
                 APP_STATE.raw.koreksi = parseKoreksiPayload(resKoreksi);
@@ -1140,6 +1184,9 @@ function loadInstantLocalCache() {
                 APP_STATE.raw.mapping = parseCompactPayload(parsed.resMain.data.mapping);
                 if (parsed.resMain.data.juice_stores) {
                     APP_STATE.raw.juice_active_stores = parseCompactPayload(parsed.resMain.data.juice_stores);
+                }
+                if (parsed.resMain.data.discount_fruit) {
+                    APP_STATE.raw.discount_fruit_mapping = parseCompactPayload(parsed.resMain.data.discount_fruit);
                 }
                 if (parsed.resKoreksi) {
                     APP_STATE.raw.koreksi = parseKoreksiPayload(parsed.resKoreksi);
@@ -1255,7 +1302,8 @@ window.handleFilterChange = function() {
                 (item.DESCP && item.DESCP.toLowerCase().includes(search)) ||
                 (item.PLU && String(item.PLU).toLowerCase().includes(search)) ||
                 (item.NAMA_STORE && item.NAMA_STORE.toLowerCase().includes(search)) ||
-                (item.KD_STORE && String(item.KD_STORE).toLowerCase().includes(search));
+                (item.KD_STORE && String(item.KD_STORE).toLowerCase().includes(search)) ||
+                (item.KET && String(item.KET).toLowerCase().includes(search));
             if (!matchSearch) return false;
         }
         return true;
@@ -1269,6 +1317,7 @@ window.handleFilterChange = function() {
     APP_STATE.pagination.wastePage = 1;
     APP_STATE.pagination.repackPage = 1;
     APP_STATE.pagination.koreksiPage = 1;
+    APP_STATE.pagination.discountPage = 1;
 
     renderView();
 };
@@ -1298,7 +1347,7 @@ function sortDataset(list, sortConfig) {
 
 function getSortHeaderIcon(section, columnKey) {
     const cur = APP_STATE.sort[section];
-    if (cur.key !== columnKey) {
+    if (!cur || cur.key !== columnKey) {
         return `<span class="opacity-30 text-[9px] ml-1">⇅</span>`;
     }
     return cur.dir === 'asc' 
@@ -1345,7 +1394,8 @@ window.switchView = function(viewName) {
         sales: "Sales Performance Overview",
         waste: "Waste & Pemusnahan Monitoring",
         repack: "Repacking & Audit Toko",
-        koreksi: "Koreksi Buah & Sayur Monitoring"
+        koreksi: "Koreksi Buah & Sayur Monitoring",
+        discount: "Sales Performance Buah Diskon Overview"
     };
     const titleEl = document.getElementById('view-title-desktop');
     if (titleEl) titleEl.innerText = titles[viewName] || "Dashboard";
@@ -1367,6 +1417,8 @@ function renderView() {
         renderRepack(container);
     } else if (APP_STATE.activeView === 'koreksi') {
         renderKoreksi(container);
+    } else if (APP_STATE.activeView === 'discount') {
+        renderDiscountFruit(container);
     }
 }
 
@@ -1877,29 +1929,29 @@ function renderRepack(container) {
 
     container.innerHTML = `
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 mb-5">
-            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-l-4 border-l-rose-500 shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Perlu Repack Segera</span>
-                <h3 class="text-base sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-0.5">${alertZeroCount} Item</h3>
-                <span class="text-[9px] text-slate-400 font-medium block">Qty Repack = 0</span>
-            </div>
-
-            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-l-4 border-l-amber-500 shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">SOH Raw Material</span>
-                <h3 class="text-base sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-0.5">${totalSohRaw.toLocaleString('id-ID')}</h3>
-                <span class="text-[9px] text-slate-400 font-medium block">Stok Mentah Aktif</span>
-            </div>
-
-            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-l-4 border-l-emerald-500 shadow-sm col-span-2 sm:col-span-1">
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-emerald-500 shadow-sm">
                 <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Qty Repack</span>
-                <h3 class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">${totalQtyRepack.toLocaleString('id-ID')}</h3>
-                <span class="text-[9px] text-slate-400 font-medium block">Total Repacking Toko</span>
+                <h3 class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">${totalQtyRepack.toLocaleString('id-ID')} Pcs</h3>
+                <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">Hasil Repacking Toko</p>
+            </div>
+
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-amber-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total SOH Bahan (Raw)</span>
+                <h3 class="text-base sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-0.5 truncate">${totalSohRaw.toLocaleString('id-ID')} Pcs/Kg</h3>
+                <p class="text-[10px] sm:text-xs text-amber-500 mt-0.5 font-bold">Stok Bahan Baku</p>
+            </div>
+
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-rose-500 shadow-sm col-span-2 sm:col-span-1">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Indikasi Belum Repack</span>
+                <h3 class="text-base sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-0.5 truncate">${alertZeroCount} Item/Toko</h3>
+                <p class="text-[10px] sm:text-xs text-rose-500 mt-0.5 font-bold">SOH Ada, Repack 0</p>
             </div>
         </div>
 
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
             <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Audit Repacking Per Toko</h4>
-                <span class="text-[10px] font-bold text-purple-600 bg-purple-50 dark:bg-purple-950 px-2 py-0.5 rounded-full">${repackStoreRows.length} Baris</span>
+                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Rincian Audit Repacking Toko</h4>
+                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full">${repackStoreRows.length} Item Audit</span>
             </div>
 
             <div class="data-table-container">
@@ -1907,16 +1959,16 @@ function renderRepack(container) {
                     <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 uppercase tracking-wider text-[9px] sm:text-[10px]">
                         <tr>
                             <th onclick="handleSort('repack', 'storeName')" class="sortable-header px-3 sm:px-5 py-2.5">Toko ${getSortHeaderIcon('repack', 'storeName')}</th>
-                            <th onclick="handleSort('repack', 'descAsal')" class="sortable-header px-3 sm:px-5 py-2.5">Raw Item ${getSortHeaderIcon('repack', 'descAsal')}</th>
-                            <th onclick="handleSort('repack', 'sohRaw')" class="sortable-header px-3 sm:px-5 py-2.5 text-right bg-amber-500/10 text-amber-700 dark:text-amber-300">SOH Raw ${getSortHeaderIcon('repack', 'sohRaw')}</th>
-                            <th onclick="handleSort('repack', 'descHasil')" class="sortable-header px-3 sm:px-5 py-2.5">Hasil Repack ${getSortHeaderIcon('repack', 'descHasil')}</th>
-                            <th onclick="handleSort('repack', 'qtyRepack')" class="sortable-header px-3 sm:px-5 py-2.5 text-right bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">Qty Repack ${getSortHeaderIcon('repack', 'qtyRepack')}</th>
-                            <th onclick="handleSort('repack', 'qtySales')" class="sortable-header px-3 sm:px-5 py-2.5 text-right font-black text-teal-600 dark:text-teal-400">Qty Sales ${getSortHeaderIcon('repack', 'qtySales')}</th>
-                            <th onclick="handleSort('repack', 'ratioRepackSales')" class="sortable-header px-3 sm:px-5 py-2.5 text-center font-black text-indigo-600 dark:text-indigo-400">% Repack / Sales ${getSortHeaderIcon('repack', 'ratioRepackSales')}</th>
+                            <th onclick="handleSort('repack', 'descAsal')" class="sortable-header px-3 sm:px-5 py-2.5">Bahan Baku (Raw) ${getSortHeaderIcon('repack', 'descAsal')}</th>
+                            <th onclick="handleSort('repack', 'sohRaw')" class="sortable-header px-3 sm:px-5 py-2.5 text-right">SOH Raw ${getSortHeaderIcon('repack', 'sohRaw')}</th>
+                            <th onclick="handleSort('repack', 'descHasil')" class="sortable-header px-3 sm:px-5 py-2.5">Produk Olahan ${getSortHeaderIcon('repack', 'descHasil')}</th>
+                            <th onclick="handleSort('repack', 'qtyRepack')" class="sortable-header px-3 sm:px-5 py-2.5 text-right bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">Qty Repack ${getSortHeaderIcon('repack', 'qtyRepack')}</th>
+                            <th onclick="handleSort('repack', 'qtySales')" class="sortable-header px-3 sm:px-5 py-2.5 text-right">Qty Sales ${getSortHeaderIcon('repack', 'qtySales')}</th>
+                            <th onclick="handleSort('repack', 'ratioRepackSales')" class="sortable-header px-3 sm:px-5 py-2.5 text-right font-black">% Repack/Sales ${getSortHeaderIcon('repack', 'ratioRepackSales')}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
-                        ${renderRepackStoreTableRows(repackStoreRows)}
+                        ${renderRepackTableRows(repackStoreRows)}
                     </tbody>
                 </table>
             </div>
@@ -1932,7 +1984,7 @@ function renderRepack(container) {
     `;
 }
 
-function renderRepackStoreTableRows(data) {
+function renderRepackTableRows(data) {
     if (!data || data.length === 0) {
         return `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-semibold">Tidak ada data audit repacking.</td></tr>`;
     }
@@ -1941,92 +1993,140 @@ function renderRepackStoreTableRows(data) {
     const pageItems = data.slice(start, start + APP_STATE.pagination.limit);
 
     return pageItems.map(item => {
-        const isAlertZero = item.qtyRepack === 0 && item.sohRaw > 0;
-        const rowBgClass = isAlertZero ? 'bg-rose-50/60 dark:bg-rose-950/20' : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40';
+        const isJuiceActive = isStoreJuiceActive(item.kdStore);
+        const juiceStatusTag = !isJuiceActive ? `<span class="text-[9px] font-bold text-rose-500 dark:text-rose-400 block mt-0.5">Toko Tidak Aktif Juice</span>` : '';
 
         return `
-            <tr class="${rowBgClass} transition-colors">
+            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
                 <td class="px-3 sm:px-5 py-3">
                     <p class="font-extrabold text-slate-800 dark:text-slate-100">${item.storeName}</p>
                     <span class="text-[10px] text-slate-400 font-medium">${item.kdStore}</span>
+                    ${juiceStatusTag}
                 </td>
                 <td class="px-3 sm:px-5 py-3">
-                    <p class="font-bold text-slate-800 dark:text-slate-200">${item.descAsal}</p>
+                    <p class="font-extrabold text-slate-800 dark:text-slate-200">${item.descAsal}</p>
                     <span class="text-[10px] text-amber-600 dark:text-amber-400 font-mono font-bold">PLU: ${item.pluAsal}</span>
                 </td>
-                <td class="px-3 sm:px-5 py-3 text-right font-black text-amber-600 dark:text-amber-400 bg-amber-50/30 dark:bg-amber-950/10">${item.sohRaw.toLocaleString('id-ID')}</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black text-amber-600 dark:text-amber-400">${item.sohRaw.toLocaleString('id-ID')}</td>
                 <td class="px-3 sm:px-5 py-3">
-                    <p class="font-bold text-slate-800 dark:text-slate-200">${item.descHasil}</p>
+                    <p class="font-extrabold text-slate-800 dark:text-slate-200">${item.descHasil}</p>
                     <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">PLU: ${item.pluHasil}</span>
                 </td>
-                <td class="px-3 sm:px-5 py-3 text-right font-black ${isAlertZero ? 'text-rose-600 dark:text-rose-400 animate-pulse font-extrabold' : 'text-emerald-600 dark:text-emerald-400'} bg-emerald-50/30 dark:bg-emerald-950/10">
-                    ${item.qtyRepack.toLocaleString('id-ID')}
-                </td>
-                <td class="px-3 sm:px-5 py-3 text-right font-black text-teal-600 dark:text-teal-400">${item.qtySales.toLocaleString('id-ID')}</td>
-                <td class="px-3 sm:px-5 py-3 text-center font-extrabold text-indigo-600 dark:text-indigo-400">${item.ratioRepackSales.toFixed(1)}%</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/10">${item.qtyRepack.toLocaleString('id-ID')}</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black text-slate-700 dark:text-slate-300">${item.qtySales.toLocaleString('id-ID')}</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black text-blue-600 dark:text-blue-400">${item.ratioRepackSales.toFixed(1)}%</td>
             </tr>
         `;
     }).join('');
 }
 
+window.changePage = function(delta) {
+    const pData = APP_STATE.filtered.processed.filter(isCfOrJuiceItem);
+    const maxPage = Math.ceil(pData.length / APP_STATE.pagination.limit) || 1;
+    APP_STATE.pagination.page = Math.max(1, Math.min(maxPage, APP_STATE.pagination.page + delta));
+    renderView();
+};
+
+window.changeWastePage = function(delta) {
+    const totalItems = APP_STATE.filtered.processed.length + APP_STATE.filtered.raw_fruit.length;
+    const maxPage = Math.ceil(totalItems / APP_STATE.pagination.limit) || 1;
+    APP_STATE.pagination.wastePage = Math.max(1, Math.min(maxPage, APP_STATE.pagination.wastePage + delta));
+    renderView();
+};
+
+window.changeRepackPage = function(delta) {
+    APP_STATE.pagination.repackPage = Math.max(1, APP_STATE.pagination.repackPage + delta);
+    renderView();
+};
+
+window.changeKoreksiPage = function(delta) {
+    const maxPage = Math.ceil((APP_STATE.filtered.koreksi || []).length / APP_STATE.pagination.limit) || 1;
+    APP_STATE.pagination.koreksiPage = Math.max(1, Math.min(maxPage, APP_STATE.pagination.koreksiPage + delta));
+    renderView();
+};
+
+window.changeDiscountPage = function(delta) {
+    const dData = APP_STATE.filtered.processed.filter(isDiscountFruitItem);
+    const maxPage = Math.ceil(dData.length / APP_STATE.pagination.limit) || 1;
+    APP_STATE.pagination.discountPage = Math.max(1, Math.min(maxPage, APP_STATE.pagination.discountPage + delta));
+    renderView();
+};
+
 function renderKoreksi(container) {
     let kData = APP_STATE.filtered.koreksi || [];
 
-    let totalFruitRp = 0, totalFruitQty = 0;
-    let totalVegRp = 0, totalVegQty = 0;
-    const storeKoreksiSet = new Set();
+    let totalRp = 0, totalQty = 0;
+    let fruitRp = 0, fruitQty = 0;
+    let vegRp = 0, vegQty = 0;
 
     kData.forEach(item => {
-        if (item.KD_STORE) storeKoreksiSet.add(item.KD_STORE);
-        if (item.CATEGORY_TYPE === 'FRUIT') {
-            totalFruitRp += item.RP_KOREKSI;
-            totalFruitQty += item.QTY_KOREKSI;
+        const rp = Number(item.RP_KOREKSI || 0);
+        const qty = Number(item.QTY_KOREKSI || 0);
+        totalRp += rp;
+        totalQty += qty;
+
+        if (item.CATEGORY_TYPE === 'VEGETABLE') {
+            vegRp += rp;
+            vegQty += qty;
         } else {
-            totalVegRp += item.RP_KOREKSI;
-            totalVegQty += item.QTY_KOREKSI;
+            fruitRp += rp;
+            fruitQty += qty;
         }
     });
 
-    const netOverallRp = totalFruitRp + totalVegRp;
-    const netOverallQty = totalFruitQty + totalVegQty;
-
-    // Apply interactive column sorting for Koreksi
     kData = sortDataset(kData, APP_STATE.sort.koreksi);
 
     container.innerHTML = `
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-5">
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-purple-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Koreksi (Buah & Sayur)</span>
+                <h3 class="text-base sm:text-2xl font-black text-purple-600 dark:text-purple-400 mt-0.5 truncate">${formatSignedRupiah(totalRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">${formatSignedQty(totalQty)} Total Qty</p>
+            </div>
+
             <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-emerald-500 shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Koreksi Fruit (> 652)</span>
-                <h3 class="text-base sm:text-2xl font-black ${totalFruitRp >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'} mt-0.5 truncate">${formatSignedRupiah(totalFruitRp)}</h3>
-                <p class="text-[10px] sm:text-xs font-extrabold mt-0.5 ${totalFruitQty >= 0 ? 'text-emerald-500' : 'text-rose-500'}">${formatSignedQty(totalFruitQty)} Pcs/Kg</p>
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Koreksi Buah (Dept > 652)</span>
+                <h3 class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">${formatSignedRupiah(fruitRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-emerald-500 mt-0.5 font-bold">${formatSignedQty(fruitQty)} Qty</p>
             </div>
 
-            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-lime-500 shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Koreksi Vegetable (651)</span>
-                <h3 class="text-base sm:text-2xl font-black ${totalVegRp >= 0 ? 'text-lime-600 dark:text-lime-400' : 'text-rose-600 dark:text-rose-400'} mt-0.5 truncate">${formatSignedRupiah(totalVegRp)}</h3>
-                <p class="text-[10px] sm:text-xs font-extrabold mt-0.5 ${totalVegQty >= 0 ? 'text-lime-500' : 'text-rose-500'}">${formatSignedQty(totalVegQty)} Pcs/Kg</p>
-            </div>
-
-            <div class="kpi-card bg-slate-900 text-white border border-slate-800 border-t-4 ${netOverallRp >= 0 ? 'border-t-emerald-500' : 'border-t-rose-500'} shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Net Total Koreksi</span>
-                <h3 class="text-base sm:text-2xl font-black ${netOverallRp >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-0.5 truncate">${formatSignedRupiah(netOverallRp)}</h3>
-                <p class="text-[10px] sm:text-xs ${netOverallQty >= 0 ? 'text-emerald-300' : 'text-rose-300'} font-extrabold mt-0.5">${formatSignedQty(netOverallQty)} Net Pcs/Kg</p>
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-amber-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Koreksi Sayur (Dept 651)</span>
+                <h3 class="text-base sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-0.5 truncate">${formatSignedRupiah(vegRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-amber-500 mt-0.5 font-bold">${formatSignedQty(vegQty)} Qty</p>
             </div>
 
             <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-indigo-500 shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Toko Terkoreksi</span>
-                <h3 class="text-base sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5">${storeKoreksiSet.size} Toko</h3>
-                <span class="text-[9px] text-slate-400 font-medium block">Store Koreksi Aktif</span>
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Transaksi Koreksi</span>
+                <h3 class="text-base sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5">${kData.length} Records</h3>
+                <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">Monitoring Penyesuaian</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-black text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">
+                        🏪 Top 10 Toko Nilai Koreksi
+                    </h4>
+                </div>
+                <div class="chart-container"><canvas id="chart-koreksi-stores"></canvas></div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-black text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">
+                        🥬 Top 10 Produk Koreksi Terbesar
+                    </h4>
+                </div>
+                <div class="chart-container"><canvas id="chart-koreksi-products"></canvas></div>
             </div>
         </div>
 
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
             <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <div>
-                    <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Rincian Koreksi Buah & Sayur</h4>
-                    <p class="text-[10px] text-slate-400">Status (+ Green = Penambahan / - Red = Pengurangan)</p>
-                </div>
-                <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-full">${kData.length} Baris</span>
+                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Rincian Transaksi Koreksi Buah & Sayur</h4>
+                <span class="text-[10px] font-bold text-purple-600 bg-purple-50 dark:bg-purple-950 px-2 py-0.5 rounded-full">${kData.length} Item</span>
             </div>
 
             <div class="data-table-container">
@@ -2034,11 +2134,10 @@ function renderKoreksi(container) {
                     <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 uppercase tracking-wider text-[9px] sm:text-[10px]">
                         <tr>
                             <th onclick="handleSort('koreksi', 'NAMA_STORE')" class="sortable-header px-3 sm:px-5 py-2.5">Toko ${getSortHeaderIcon('koreksi', 'NAMA_STORE')}</th>
-                            <th onclick="handleSort('koreksi', 'DESCP')" class="sortable-header px-3 sm:px-5 py-2.5">PLU & Produk ${getSortHeaderIcon('koreksi', 'DESCP')}</th>
-                            <th onclick="handleSort('koreksi', 'CATEGORY_TYPE')" class="sortable-header px-3 sm:px-5 py-2.5 text-center">Kategori / Dept ${getSortHeaderIcon('koreksi', 'CATEGORY_TYPE')}</th>
+                            <th onclick="handleSort('koreksi', 'DESCP')" class="sortable-header px-3 sm:px-5 py-2.5">PLU & Deskripsi ${getSortHeaderIcon('koreksi', 'DESCP')}</th>
+                            <th onclick="handleSort('koreksi', 'CATEGORY_TYPE')" class="sortable-header px-3 sm:px-5 py-2.5 text-center">Kategori ${getSortHeaderIcon('koreksi', 'CATEGORY_TYPE')}</th>
                             <th onclick="handleSort('koreksi', 'QTY_KOREKSI')" class="sortable-header px-3 sm:px-5 py-2.5 text-right">Qty Koreksi ${getSortHeaderIcon('koreksi', 'QTY_KOREKSI')}</th>
-                            <th onclick="handleSort('koreksi', 'RP_KOREKSI')" class="sortable-header px-3 sm:px-5 py-2.5 text-right font-black bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400">Rp Koreksi ${getSortHeaderIcon('koreksi', 'RP_KOREKSI')}</th>
-                            <th class="px-3 sm:px-5 py-2.5 text-center">Status Koreksi</th>
+                            <th onclick="handleSort('koreksi', 'RP_KOREKSI')" class="sortable-header px-3 sm:px-5 py-2.5 text-right bg-purple-50/50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400">Rp Koreksi ${getSortHeaderIcon('koreksi', 'RP_KOREKSI')}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -2056,155 +2155,316 @@ function renderKoreksi(container) {
             </div>
         </div>
     `;
+
+    renderKoreksiCharts(kData);
 }
 
 function renderKoreksiTableRows(data) {
     if (!data || data.length === 0) {
-        return `<tr><td colspan="6" class="text-center py-8 text-slate-400 font-semibold">Tidak ada data koreksi.</td></tr>`;
+        return `<tr><td colspan="5" class="text-center py-8 text-slate-400 font-semibold">Tidak ada data koreksi.</td></tr>`;
     }
 
     const start = (APP_STATE.pagination.koreksiPage - 1) * APP_STATE.pagination.limit;
     const pageItems = data.slice(start, start + APP_STATE.pagination.limit);
 
     return pageItems.map(item => {
-        const isPlus = item.RP_KOREKSI > 0 || item.QTY_KOREKSI > 0;
-        const isMinus = item.RP_KOREKSI < 0 || item.QTY_KOREKSI < 0;
-
-        let statusBadge = `<span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Nol (0)</span>`;
-        if (isPlus) {
-            statusBadge = `<span class="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full">+ Koreksi Plus</span>`;
-        } else if (isMinus) {
-            statusBadge = `<span class="bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 text-[10px] font-black px-2 py-0.5 rounded-full">- Koreksi Minus</span>`;
+        let catBadge = `<span class="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full">BUAH</span>`;
+        if (item.CATEGORY_TYPE === 'VEGETABLE') {
+            catBadge = `<span class="bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full">SAYUR</span>`;
         }
 
-        const catBadge = item.CATEGORY_TYPE === 'VEGETABLE'
-            ? `<span class="bg-lime-100 dark:bg-lime-950/80 text-lime-700 dark:text-lime-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full">Veg (651)</span>`
-            : `<span class="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full">Fruit (${item.DEPT_CODE})</span>`;
-
-        const rpClass = isPlus ? 'text-emerald-600 dark:text-emerald-400 font-black' : (isMinus ? 'text-rose-600 dark:text-rose-400 font-black' : 'text-slate-600');
-        const qtyClass = isPlus ? 'text-emerald-600 dark:text-emerald-400 font-black' : (isMinus ? 'text-rose-600 dark:text-rose-400 font-black' : 'text-slate-600');
+        const rpVal = Number(item.RP_KOREKSI || 0);
+        const qtyVal = Number(item.QTY_KOREKSI || 0);
+        const rpClass = rpVal > 0 ? 'text-emerald-600 dark:text-emerald-400' : (rpVal < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-600');
 
         return `
             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
                 <td class="px-3 sm:px-5 py-3">
                     <p class="font-extrabold text-slate-800 dark:text-slate-100">${item.NAMA_STORE || item.KD_STORE}</p>
-                    <span class="text-[10px] text-slate-400 font-medium">${item.KD_STORE || ''}</span>
+                    <span class="text-[10px] text-slate-400 font-medium">${item.KD_STORE}</span>
                 </td>
                 <td class="px-3 sm:px-5 py-3">
-                    <p class="font-extrabold text-slate-800 dark:text-slate-200">${item.DESCP || item.PLU}</p>
-                    <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-mono font-bold">PLU: ${item.PLU}</span>
+                    <p class="font-extrabold text-slate-800 dark:text-slate-200">${item.DESCP}</p>
+                    <span class="text-[10px] text-purple-600 dark:text-purple-400 font-mono font-bold">PLU: ${item.PLU}</span>
                 </td>
                 <td class="px-3 sm:px-5 py-3 text-center">${catBadge}</td>
-                <td class="px-3 sm:px-5 py-3 text-right ${qtyClass}">${formatSignedQty(item.QTY_KOREKSI)}</td>
-                <td class="px-3 sm:px-5 py-3 text-right bg-indigo-50/20 dark:bg-indigo-950/10 ${rpClass}">${formatSignedRupiah(item.RP_KOREKSI)}</td>
-                <td class="px-3 sm:px-5 py-3 text-center">${statusBadge}</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black text-slate-700 dark:text-slate-300">${formatSignedQty(qtyVal)}</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black ${rpClass} bg-purple-50/30 dark:bg-purple-950/10">${formatSignedRupiah(rpVal)}</td>
             </tr>
         `;
     }).join('');
 }
 
-window.changePage = function(delta) {
-    const pData = APP_STATE.filtered.processed.filter(isCfOrJuiceItem);
-    const maxPage = Math.ceil(pData.length / APP_STATE.pagination.limit) || 1;
-    const newPage = APP_STATE.pagination.page + delta;
-    if (newPage >= 1 && newPage <= maxPage) {
-        APP_STATE.pagination.page = newPage;
-        renderView();
-    }
-};
+function renderKoreksiCharts(kData) {
+    const storeMap = {};
+    const prodMap = {};
 
-window.changeWastePage = function(delta) {
-    const totalItems = APP_STATE.filtered.processed.length + APP_STATE.filtered.raw_fruit.length;
-    const maxPage = Math.ceil(totalItems / APP_STATE.pagination.limit) || 1;
-    const newPage = APP_STATE.pagination.wastePage + delta;
-    if (newPage >= 1 && newPage <= maxPage) {
-        APP_STATE.pagination.wastePage = newPage;
-        renderView();
-    }
-};
+    kData.forEach(item => {
+        const storeName = item.NAMA_STORE || item.KD_STORE || 'Store';
+        const prodName = item.DESCP || item.PLU || 'Item';
+        const rp = Math.abs(Number(item.RP_KOREKSI || 0));
 
-window.changeRepackPage = function(delta) {
-    const newPage = APP_STATE.pagination.repackPage + delta;
-    if (newPage >= 1) {
-        APP_STATE.pagination.repackPage = newPage;
-        renderView();
-    }
-};
+        storeMap[storeName] = (storeMap[storeName] || 0) + rp;
+        prodMap[prodName] = (prodMap[prodName] || 0) + rp;
+    });
 
-window.changeKoreksiPage = function(delta) {
-    const kData = APP_STATE.filtered.koreksi || [];
-    const maxPage = Math.ceil(kData.length / APP_STATE.pagination.limit) || 1;
-    const newPage = APP_STATE.pagination.koreksiPage + delta;
-    if (newPage >= 1 && newPage <= maxPage) {
-        APP_STATE.pagination.koreksiPage = newPage;
-        renderView();
+    const topStores = Object.entries(storeMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const topProducts = Object.entries(prodMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+    const isDark = APP_STATE.isDarkMode;
+    const labelColor = isDark ? '#cbd5e1' : '#475569';
+    const gridColor = isDark ? 'rgba(51, 65, 85, 0.4)' : 'rgba(226, 232, 240, 0.6)';
+
+    const ctxStores = document.getElementById('chart-koreksi-stores');
+    if (ctxStores && topStores.length > 0) {
+        APP_STATE.chartInstances.koreksiStores = new Chart(ctxStores, {
+            type: 'bar',
+            data: {
+                labels: topStores.map(s => truncateLabel(s[0])),
+                datasets: [{ label: 'Rp Koreksi', data: topStores.map(s => s[1]), backgroundColor: '#a855f7', borderRadius: 6, barThickness: 14 }]
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                layout: { padding: { right: 20, left: 10 } },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { color: labelColor, font: { size: 10 }, callback: v => formatRupiah(v) } },
+                    y: { grid: { display: false }, ticks: { color: labelColor, font: { size: 10, weight: 'bold' }, autoSkip: false } }
+                }
+            }
+        });
     }
-};
+
+    const ctxProducts = document.getElementById('chart-koreksi-products');
+    if (ctxProducts && topProducts.length > 0) {
+        APP_STATE.chartInstances.koreksiProducts = new Chart(ctxProducts, {
+            type: 'bar',
+            data: {
+                labels: topProducts.map(p => truncateLabel(p[0])),
+                datasets: [{ label: 'Rp Koreksi', data: topProducts.map(p => p[1]), backgroundColor: '#ec4899', borderRadius: 6, barThickness: 14 }]
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                layout: { padding: { right: 20, left: 10 } },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { color: labelColor, font: { size: 10 }, callback: v => formatRupiah(v) } },
+                    y: { grid: { display: false }, ticks: { color: labelColor, font: { size: 10, weight: 'bold' }, autoSkip: false } }
+                }
+            }
+        });
+    }
+}
+
+function renderDiscountFruit(container) {
+    let dData = APP_STATE.filtered.processed.filter(isDiscountFruitItem);
+
+    let totalSalesRp = 0, totalQtySales = 0, totalMarginRp = 0;
+    dData.forEach(item => {
+        totalSalesRp += Number(item.RP_SALES || 0);
+        totalQtySales += Number(item.QTY_SALES || 0);
+        totalMarginRp += Number(item.RP_MARGIN || 0);
+    });
+
+    dData = sortDataset(dData, APP_STATE.sort.discount);
+    const activeStoresCount = new Set(dData.map(x => x.KD_STORE).filter(Boolean)).size;
+
+    container.innerHTML = `
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-5">
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-amber-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Sales Buah Diskon</span>
+                <h3 class="text-base sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-0.5 truncate">${formatRupiah(totalSalesRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-amber-500 font-bold mt-0.5">${totalQtySales.toLocaleString('id-ID')} Pcs Sales</p>
+            </div>
+
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-emerald-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Margin Diskon</span>
+                <h3 class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">${formatRupiah(totalMarginRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-emerald-500 font-bold mt-0.5">Rp Profit Diskon</p>
+            </div>
+
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-indigo-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Toko Penjual Diskon</span>
+                <h3 class="text-base sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5">${activeStoresCount} Toko</h3>
+                <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">Aktif Buah Diskon</p>
+            </div>
+
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-teal-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Items Diskon</span>
+                <h3 class="text-base sm:text-2xl font-black text-teal-600 dark:text-teal-400 mt-0.5">${dData.length} Records</h3>
+                <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">Master/PLU Diskon</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-black text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">
+                        🏪 Top 10 Toko Penjualan Buah Diskon
+                    </h4>
+                </div>
+                <div class="chart-container"><canvas id="chart-discount-stores"></canvas></div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-black text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">
+                        🏷️ Top 10 Produk Buah Diskon
+                    </h4>
+                </div>
+                <div class="chart-container"><canvas id="chart-discount-products"></canvas></div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Rincian Penjualan Buah Diskon</h4>
+                <span class="text-[10px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-950 px-2 py-0.5 rounded-full">${dData.length} Item</span>
+            </div>
+
+            <div class="data-table-container">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 uppercase tracking-wider text-[9px] sm:text-[10px]">
+                        <tr>
+                            <th onclick="handleSort('discount', 'NAMA_STORE')" class="sortable-header px-3 sm:px-5 py-2.5">Toko ${getSortHeaderIcon('discount', 'NAMA_STORE')}</th>
+                            <th onclick="handleSort('discount', 'DESCP')" class="sortable-header px-3 sm:px-5 py-2.5">PLU & Item Diskon ${getSortHeaderIcon('discount', 'DESCP')}</th>
+                            <th onclick="handleSort('discount', 'QTY_SALES')" class="sortable-header px-3 sm:px-5 py-2.5 text-right">Qty Sales ${getSortHeaderIcon('discount', 'QTY_SALES')}</th>
+                            <th onclick="handleSort('discount', 'RP_SALES')" class="sortable-header px-3 sm:px-5 py-2.5 text-right bg-amber-50/50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400">Rp Sales ${getSortHeaderIcon('discount', 'RP_SALES')}</th>
+                            <th onclick="handleSort('discount', 'RP_MARGIN')" class="sortable-header px-3 sm:px-5 py-2.5 text-right">Rp Margin ${getSortHeaderIcon('discount', 'RP_MARGIN')}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        ${renderDiscountTableRows(dData)}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="p-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                <span class="text-[11px] text-slate-500">Hal ${APP_STATE.pagination.discountPage} / ${Math.ceil(dData.length / APP_STATE.pagination.limit) || 1}</span>
+                <div class="flex items-center gap-1">
+                    <button onclick="changeDiscountPage(-1)" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-bold text-xs">Prev</button>
+                    <button onclick="changeDiscountPage(1)" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-bold text-xs">Next</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    renderDiscountCharts(dData);
+}
+
+function renderDiscountTableRows(data) {
+    if (!data || data.length === 0) {
+        return `<tr><td colspan="5" class="text-center py-8 text-slate-400 font-semibold">Tidak ada data penjualan buah diskon.</td></tr>`;
+    }
+
+    const start = (APP_STATE.pagination.discountPage - 1) * APP_STATE.pagination.limit;
+    const pageItems = data.slice(start, start + APP_STATE.pagination.limit);
+
+    return pageItems.map(item => {
+        const rpSales = Number(item.RP_SALES || 0);
+        const rpMargin = Number(item.RP_MARGIN || 0);
+
+        return `
+            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                <td class="px-3 sm:px-5 py-3">
+                    <p class="font-extrabold text-slate-800 dark:text-slate-100">${item.NAMA_STORE || item.KD_STORE}</p>
+                    <span class="text-[10px] text-slate-400 font-medium">${item.KD_STORE}</span>
+                </td>
+                <td class="px-3 sm:px-5 py-3">
+                    <p class="font-extrabold text-slate-800 dark:text-slate-200">${item.DESCP || item.PLU}</p>
+                    <span class="text-[10px] text-amber-600 dark:text-amber-400 font-mono font-bold">PLU: ${item.PLU}</span>
+                </td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black text-slate-700 dark:text-slate-300">${Number(item.QTY_SALES || 0).toLocaleString('id-ID')}</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black text-amber-600 dark:text-amber-400 bg-amber-50/30 dark:bg-amber-950/10">${formatRupiah(rpSales)}</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-bold text-slate-600 dark:text-slate-400">${formatRupiah(rpMargin)}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderDiscountCharts(dData) {
+    const storeMap = {};
+    const prodMap = {};
+
+    dData.forEach(item => {
+        const storeName = item.NAMA_STORE || item.KD_STORE || 'Store';
+        const prodName = item.DESCP || item.PLU || 'Item';
+        const sales = Number(item.RP_SALES || 0);
+
+        storeMap[storeName] = (storeMap[storeName] || 0) + sales;
+        prodMap[prodName] = (prodMap[prodName] || 0) + sales;
+    });
+
+    const topStores = Object.entries(storeMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const topProducts = Object.entries(prodMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+    const isDark = APP_STATE.isDarkMode;
+    const labelColor = isDark ? '#cbd5e1' : '#475569';
+    const gridColor = isDark ? 'rgba(51, 65, 85, 0.4)' : 'rgba(226, 232, 240, 0.6)';
+
+    const ctxStores = document.getElementById('chart-discount-stores');
+    if (ctxStores && topStores.length > 0) {
+        APP_STATE.chartInstances.discountStores = new Chart(ctxStores, {
+            type: 'bar',
+            data: {
+                labels: topStores.map(s => truncateLabel(s[0])),
+                datasets: [{ label: 'Sales Diskon (Rp)', data: topStores.map(s => s[1]), backgroundColor: '#f59e0b', borderRadius: 6, barThickness: 14 }]
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                layout: { padding: { right: 20, left: 10 } },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { color: labelColor, font: { size: 10 }, callback: v => formatRupiah(v) } },
+                    y: { grid: { display: false }, ticks: { color: labelColor, font: { size: 10, weight: 'bold' }, autoSkip: false } }
+                }
+            }
+        });
+    }
+
+    const ctxProducts = document.getElementById('chart-discount-products');
+    if (ctxProducts && topProducts.length > 0) {
+        APP_STATE.chartInstances.discountProducts = new Chart(ctxProducts, {
+            type: 'bar',
+            data: {
+                labels: topProducts.map(p => truncateLabel(p[0])),
+                datasets: [{ label: 'Sales Diskon (Rp)', data: topProducts.map(p => p[1]), backgroundColor: '#d97706', borderRadius: 6, barThickness: 14 }]
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                layout: { padding: { right: 20, left: 10 } },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { color: labelColor, font: { size: 10 }, callback: v => formatRupiah(v) } },
+                    y: { grid: { display: false }, ticks: { color: labelColor, font: { size: 10, weight: 'bold' }, autoSkip: false } }
+                }
+            }
+        });
+    }
+}
 
 window.exportToExcel = function() {
-    const activeView = APP_STATE.activeView;
     let exportData = [];
-    let fileName = `Export_${activeView}_${getTodayKey()}.xlsx`;
+    let fileName = `Export_${APP_STATE.activeView}_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
-    if (activeView === 'sales') {
-        const pData = sortDataset(APP_STATE.filtered.processed.filter(isCfOrJuiceItem), APP_STATE.sort.sales);
-        exportData = pData.map(item => ({
-            'Kode Toko': item.KD_STORE,
-            'Nama Toko': item.NAMA_STORE,
-            'PLU': item.PLU,
-            'Deskripsi Produk': item.DESCP,
-            'Qty Sales': item.QTY_SALES,
-            'Rp Sales': item.RP_SALES,
-            'Rp Margin': item.RP_MARGIN,
-            'Margin %': item.MARGIN
-        }));
-    } else if (activeView === 'waste') {
-        const pData = APP_STATE.filtered.processed;
-        const rData = APP_STATE.filtered.raw_fruit;
-        const combined = [];
-        pData.forEach(item => {
-            combined.push({
-                'Kode Toko': item.KD_STORE,
-                'Nama Toko': item.NAMA_STORE,
-                'PLU': item.PLU,
-                'Deskripsi': item.DESCP,
-                'Tipe': isJuiceItem(item) ? 'JUICE' : 'CUT FRUIT',
-                'Qty Musnah': getWasteQty(item),
-                'Rp Musnah': getWasteRp(item),
-                'Rp Sales': Number(item.RP_SALES || 0)
-            });
-        });
-        rData.forEach(item => {
-            combined.push({
-                'Kode Toko': item.KD_STORE,
-                'Nama Toko': item.NAMA_STORE,
-                'PLU': item.PLU,
-                'Deskripsi': item.DESCP,
-                'Tipe': 'RAW FRUIT',
-                'Qty Musnah': getWasteQty(item),
-                'Rp Musnah': getWasteRp(item),
-                'Rp Sales': Number(item.RP_SALES || 0)
-            });
-        });
-        exportData = sortDataset(combined, APP_STATE.sort.waste);
-    } else if (activeView === 'koreksi') {
-        const kData = sortDataset(APP_STATE.filtered.koreksi || [], APP_STATE.sort.koreksi);
-        exportData = kData.map(item => ({
-            'Kode Toko': item.KD_STORE,
-            'Nama Toko': item.NAMA_STORE,
-            'PLU': item.PLU,
-            'Deskripsi': item.DESCP,
-            'Kategori': item.CATEGORY_TYPE,
-            'Dept Code': item.DEPT_CODE,
-            'Qty Koreksi': item.QTY_KOREKSI,
-            'Rp Koreksi': item.RP_KOREKSI
-        }));
-    } else {
+    if (APP_STATE.activeView === 'sales') {
+        exportData = APP_STATE.filtered.processed.filter(isCfOrJuiceItem);
+    } else if (APP_STATE.activeView === 'waste') {
+        exportData = APP_STATE.filtered.processed.concat(APP_STATE.filtered.raw_fruit);
+    } else if (APP_STATE.activeView === 'repack') {
         exportData = APP_STATE.filtered.processed;
+    } else if (APP_STATE.activeView === 'koreksi') {
+        exportData = APP_STATE.filtered.koreksi;
+    } else if (APP_STATE.activeView === 'discount') {
+        exportData = APP_STATE.filtered.processed.filter(isDiscountFruitItem);
     }
 
     if (exportData.length === 0) {
-        Swal.fire({ icon: 'info', title: 'Data Kosong', text: 'Tidak ada data untuk di-export.' });
+        Swal.fire({ icon: 'info', title: 'Tidak Ada Data', text: 'Tidak ada data yang dapat diexport.' });
         return;
     }
 
@@ -2214,12 +2474,12 @@ window.exportToExcel = function() {
     XLSX.writeFile(wb, fileName);
 };
 
-window.onload = function() {
+document.addEventListener('DOMContentLoaded', () => {
     applyDarkModeUI();
-    loadInstantLocalCache();
     initCloudSync();
-    fetchData(false, true); // Non-blocking background sync
-};
+    loadInstantLocalCache();
+    fetchData(false, true);
+});
 
 </script>
 </body>
