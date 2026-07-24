@@ -134,7 +134,13 @@
             <nav class="space-y-1.5 no-print">
                 <button id="nav-sales" onclick="switchView('sales')" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-left sidebar-active">
                     <span class="text-lg">📊</span>
-                    <span>Sales Performance</span>
+                    <span>Sales CF & Juice</span>
+                </button>
+
+                <!-- Menu Baru: Sales Performance Fruit -->
+                <button id="nav-sales-fruit" onclick="switchView('sales_fruit')" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-left">
+                    <span class="text-lg">🍎</span>
+                    <span>Sales Performance Fruit</span>
                 </button>
 
                 <button id="nav-waste" onclick="switchView('waste')" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-left">
@@ -153,7 +159,7 @@
                     <span>Koreksi Buah Sayur</span>
                 </button>
 
-                <!-- Menu Baru: Buah Diskon -->
+                <!-- Menu: Buah Diskon -->
                 <button id="nav-discount" onclick="switchView('discount')" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-left">
                     <span class="text-lg">🏷️</span>
                     <span>Sales Buah Diskon</span>
@@ -161,7 +167,6 @@
             </nav>
         </div>
 
-        <!-- Sidebar Footer Controls -->
         <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3 no-print">
             <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/50">
                 <div class="flex items-center justify-between text-[11px] mb-1">
@@ -286,6 +291,10 @@
     <button id="bnav-sales" onclick="switchView('sales')" class="flex flex-col items-center py-1 px-1.5 rounded-xl transition-all bottom-nav-active">
         <span class="text-base leading-none">📊</span>
         <span class="text-[8px] mt-1">Sales</span>
+    </button>
+    <button id="bnav-sales-fruit" onclick="switchView('sales_fruit')" class="flex flex-col items-center py-1 px-1.5 rounded-xl transition-all text-slate-400">
+        <span class="text-base leading-none">🍎</span>
+        <span class="text-[8px] mt-1">Fruit</span>
     </button>
     <button id="bnav-waste" onclick="switchView('waste')" class="flex flex-col items-center py-1 px-1.5 rounded-xl transition-all text-slate-400">
         <span class="text-base leading-none">🗑️</span>
@@ -504,7 +513,7 @@ function recordAcAttendance(acName) {
 const CONFIG = {
     DEFAULT_API_URL: "https://script.google.com/macros/s/AKfycbzdBIgS4S2AbiNy_OYLllzN5ur5JxtzjdXG9iZhtKI_3h6oVnqcITC9JS8FNR6Z-PAi/exec",
     KOREKSI_API_URL: "https://script.google.com/macros/s/AKfycbzKJtV8gkfLVa3C152Se0hmIKE2yUWc0peVqzAL-wNBV5sA59qAR9LdpWAhAsV6Xj-q/exec",
-    PAGES: ['sales', 'waste', 'repack', 'koreksi', 'discount']
+    PAGES: ['sales', 'sales_fruit', 'waste', 'repack', 'koreksi', 'discount']
 };
 
 const savedTheme = localStorage.getItem('theme');
@@ -522,12 +531,13 @@ const APP_STATE = {
     // Interactive sorting states for each section
     sort: {
         sales: { key: 'RP_SALES', dir: 'desc' },
+        sales_fruit: { key: 'RP_SALES', dir: 'desc' },
         waste: { key: 'rpMusnah', dir: 'desc' },
         repack: { key: 'qtyRepack', dir: 'desc' },
         koreksi: { key: 'RP_KOREKSI', dir: 'desc' },
         discount: { key: 'RP_SALES', dir: 'desc' }
     },
-    pagination: { page: 1, wastePage: 1, repackPage: 1, koreksiPage: 1, discountPage: 1, limit: 25 },
+    pagination: { page: 1, salesFruitPage: 1, wastePage: 1, repackPage: 1, koreksiPage: 1, discountPage: 1, limit: 25 },
     chartInstances: {},
     acViewLogs: {},
     lastUpdatedTimestamp: null,
@@ -1314,6 +1324,7 @@ window.handleFilterChange = function() {
     APP_STATE.filtered.koreksi = (APP_STATE.raw.koreksi || []).filter(filterFn);
 
     APP_STATE.pagination.page = 1;
+    APP_STATE.pagination.salesFruitPage = 1;
     APP_STATE.pagination.wastePage = 1;
     APP_STATE.pagination.repackPage = 1;
     APP_STATE.pagination.koreksiPage = 1;
@@ -1391,7 +1402,8 @@ window.switchView = function(viewName) {
     });
 
     const titles = {
-        sales: "Sales Performance Overview",
+        sales: "Sales Performance Overview Processed Fruit",
+        sales_fruit: "Sales Performance Raw Fruit Overview",
         waste: "Monitoring Pemusnahan",
         repack: "Repacking & Administrasi",
         koreksi: "Koreksi Buah & Sayur Monitoring",
@@ -1411,6 +1423,8 @@ function renderView() {
 
     if (APP_STATE.activeView === 'sales') {
         renderSales(container);
+    } else if (APP_STATE.activeView === 'sales_fruit') {
+        renderSalesFruit(container);
     } else if (APP_STATE.activeView === 'waste') {
         renderWaste(container);
     } else if (APP_STATE.activeView === 'repack') {
@@ -1654,6 +1668,217 @@ function renderSalesCharts(pData) {
     }
 }
 
+/**
+ * Menu Baru: Sales Performance Fruit (Duplikasi dari Sales Performance, namun data source dari sheet RAW / raw_fruit)
+ * KPI Card diatas: Total Sales (Rp), Total Gross Margin (Rp GM), dan % Margin (% GM).
+ */
+function renderSalesFruit(container) {
+    let rData = APP_STATE.filtered.raw_fruit;
+
+    let totalSalesRp = 0;
+    let totalRpMargin = 0;
+    let totalQtySales = 0;
+
+    rData.forEach(item => {
+        const rp = Number(item.RP_SALES || 0);
+        const qty = Number(item.QTY_SALES || 0);
+        const rpMargin = Number(item.RP_MARGIN || 0);
+
+        totalSalesRp += rp;
+        totalQtySales += qty;
+        totalRpMargin += rpMargin;
+    });
+
+    const pctMargin = totalSalesRp > 0 ? (totalRpMargin / totalSalesRp) * 100 : 0;
+
+    // Sort dataset
+    rData = sortDataset(rData, APP_STATE.sort.sales_fruit);
+
+    container.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 mb-5">
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-emerald-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Sales Fruit</span>
+                <h3 class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">${formatRupiah(totalSalesRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">${totalQtySales.toLocaleString('id-ID')} Kg/Pcs Total</p>
+            </div>
+
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-teal-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Rp Gross Margin (Rp GM)</span>
+                <h3 class="text-base sm:text-2xl font-black text-teal-600 dark:text-teal-400 mt-0.5 truncate">${formatRupiah(totalRpMargin)}</h3>
+                <p class="text-[10px] sm:text-xs text-teal-500 mt-0.5 font-extrabold">Margin Penjualan Raw Fruit</p>
+            </div>
+
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-blue-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">% Gross Margin (% GM)</span>
+                <h3 class="text-base sm:text-2xl font-black text-blue-600 dark:text-blue-400 mt-0.5 truncate">${pctMargin.toFixed(1)}%</h3>
+                <p class="text-[10px] sm:text-xs text-blue-500 mt-0.5 font-extrabold">Persentase GM</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-black text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">
+                        🏪 Top 10 Toko Penjualan Fruit (RAW)
+                    </h4>
+                </div>
+                <div class="chart-container"><canvas id="chart-top-stores-fruit"></canvas></div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-black text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">
+                        🍎 Top 10 Produk Fruit Terlaris (RAW)
+                    </h4>
+                </div>
+                <div class="chart-container"><canvas id="chart-top-products-fruit"></canvas></div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Rincian Penjualan Fruit (Raw Material)</h4>
+                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full">${rData.length} Item</span>
+            </div>
+
+            <div class="data-table-container">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 uppercase tracking-wider text-[9px] sm:text-[10px]">
+                        <tr>
+                            <th onclick="handleSort('sales_fruit', 'NAMA_STORE')" class="sortable-header px-3 sm:px-5 py-2.5">Toko ${getSortHeaderIcon('sales_fruit', 'NAMA_STORE')}</th>
+                            <th onclick="handleSort('sales_fruit', 'DESCP')" class="sortable-header px-3 sm:px-5 py-2.5">PLU & Produk ${getSortHeaderIcon('sales_fruit', 'DESCP')}</th>
+                            <th onclick="handleSort('sales_fruit', 'QTY_SALES')" class="sortable-header px-3 sm:px-5 py-2.5 text-right">Qty ${getSortHeaderIcon('sales_fruit', 'QTY_SALES')}</th>
+                            <th onclick="handleSort('sales_fruit', 'RP_SALES')" class="sortable-header px-3 sm:px-5 py-2.5 text-right bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">Rp Sales ${getSortHeaderIcon('sales_fruit', 'RP_SALES')}</th>
+                            <th onclick="handleSort('sales_fruit', 'RP_MARGIN')" class="sortable-header px-3 sm:px-5 py-2.5 text-right">Rp Margin ${getSortHeaderIcon('sales_fruit', 'RP_MARGIN')}</th>
+                            <th onclick="handleSort('sales_fruit', 'MARGIN')" class="sortable-header px-3 sm:px-5 py-2.5 text-right font-black text-blue-600 dark:text-blue-400">% Margin ${getSortHeaderIcon('sales_fruit', 'MARGIN')}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        ${renderSalesFruitTableRows(rData)}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="p-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                <span class="text-[11px] text-slate-500">Hal ${APP_STATE.pagination.salesFruitPage} / ${Math.ceil(rData.length / APP_STATE.pagination.limit) || 1}</span>
+                <div class="flex items-center gap-1">
+                    <button onclick="changeSalesFruitPage(-1)" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-bold text-xs">Prev</button>
+                    <button onclick="changeSalesFruitPage(1)" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-bold text-xs">Next</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    renderSalesFruitCharts(rData);
+}
+
+function renderSalesFruitTableRows(data) {
+    if (!data || data.length === 0) {
+        return `<tr><td colspan="6" class="text-center py-8 text-slate-400 font-semibold">Tidak ada data penjualan raw fruit.</td></tr>`;
+    }
+
+    const start = (APP_STATE.pagination.salesFruitPage - 1) * APP_STATE.pagination.limit;
+    const pageItems = data.slice(start, start + APP_STATE.pagination.limit);
+
+    return pageItems.map(item => {
+        const rpSales = Number(item.RP_SALES || 0);
+        const rpMargin = Number(item.RP_MARGIN || 0);
+        const pctMargin = rpSales > 0 ? (rpMargin / rpSales) * 100 : Number(item.MARGIN || 0);
+
+        return `
+            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                <td class="px-3 sm:px-5 py-3">
+                    <p class="font-extrabold text-slate-800 dark:text-slate-100">${item.NAMA_STORE || item.KD_STORE}</p>
+                    <span class="text-[10px] text-slate-400 font-medium">${item.KD_STORE || ''}</span>
+                </td>
+                <td class="px-3 sm:px-5 py-3">
+                    <p class="font-extrabold text-slate-800 dark:text-slate-200">${item.DESCP || item.PLU}</p>
+                    <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">PLU: ${item.PLU}</span>
+                </td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black text-slate-700 dark:text-slate-300">${Number(item.QTY_SALES || 0).toLocaleString('id-ID')}</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/10">${formatRupiah(rpSales)}</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-bold text-slate-600 dark:text-slate-400">${formatRupiah(rpMargin)}</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black text-blue-600 dark:text-blue-400">${pctMargin.toFixed(1)}%</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderSalesFruitCharts(rData) {
+    const storeMap = {};
+    const prodMap = {};
+
+    rData.forEach(item => {
+        const storeName = item.NAMA_STORE || item.KD_STORE || 'Store';
+        const prodName = item.DESCP || item.PLU || 'Item';
+        const sales = Number(item.RP_SALES || 0);
+
+        storeMap[storeName] = (storeMap[storeName] || 0) + sales;
+        prodMap[prodName] = (prodMap[prodName] || 0) + sales;
+    });
+
+    const topStores = Object.entries(storeMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const topProducts = Object.entries(prodMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+    const isDark = APP_STATE.isDarkMode;
+    const labelColor = isDark ? '#cbd5e1' : '#475569';
+    const gridColor = isDark ? 'rgba(51, 65, 85, 0.4)' : 'rgba(226, 232, 240, 0.6)';
+
+    const ctxStores = document.getElementById('chart-top-stores-fruit');
+    if (ctxStores && topStores.length > 0) {
+        APP_STATE.chartInstances.storesFruit = new Chart(ctxStores, {
+            type: 'bar',
+            data: {
+                labels: topStores.map(s => truncateLabel(s[0])),
+                datasets: [{
+                    label: 'Sales (Rp)',
+                    data: topStores.map(s => s[1]),
+                    backgroundColor: '#059669',
+                    borderRadius: 6,
+                    barThickness: 14
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                layout: { padding: { right: 20, left: 10 } },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { color: labelColor, font: { size: 10 }, callback: v => formatRupiah(v) } },
+                    y: { grid: { display: false }, ticks: { color: labelColor, font: { size: 10, weight: 'bold' }, autoSkip: false } }
+                }
+            }
+        });
+    }
+
+    const ctxProducts = document.getElementById('chart-top-products-fruit');
+    if (ctxProducts && topProducts.length > 0) {
+        APP_STATE.chartInstances.productsFruit = new Chart(ctxProducts, {
+            type: 'bar',
+            data: {
+                labels: topProducts.map(p => truncateLabel(p[0])),
+                datasets: [{
+                    label: 'Sales (Rp)',
+                    data: topProducts.map(p => p[1]),
+                    backgroundColor: '#0284c7',
+                    borderRadius: 6,
+                    barThickness: 14
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                layout: { padding: { right: 20, left: 10 } },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { color: labelColor, font: { size: 10 }, callback: v => formatRupiah(v) } },
+                    y: { grid: { display: false }, ticks: { color: labelColor, font: { size: 10, weight: 'bold' }, autoSkip: false } }
+                }
+            }
+        });
+    }
+}
+
 function renderWaste(container) {
     const pData = APP_STATE.filtered.processed;
     const rData = APP_STATE.filtered.raw_fruit;
@@ -1876,6 +2101,13 @@ function renderWasteCharts(pData, rData) {
     }
 }
 
+/**
+ * Menu Repacking & Administrasi
+ * Catatan penting: 
+ * - Total Qty Repack diambil dari processedList (QTY_REPACKING_TOKO / QTY_REPACK).
+ * - On Hand Raw diambil dari rawList (QTY_SOH / SOH).
+ * - Keterangan 'Tidak Aktif Juice' dipertahankan.
+ */
 function renderRepack(container) {
     const mapping = APP_STATE.raw.mapping;
     const processedList = APP_STATE.filtered.processed;
@@ -1892,12 +2124,26 @@ function renderRepack(container) {
     rawList.forEach(r => { if (r.KD_STORE && !allStoresMap[r.KD_STORE]) allStoresMap[r.KD_STORE] = r.NAMA_STORE || r.KD_STORE; });
 
     let repackStoreRows = [];
+    let totalSohRawAll = 0;
+    let totalQtyRepackAll = 0;
+
+    // Hitung SOH Raw total dari rawList
+    rawList.forEach(r => {
+        totalSohRawAll += Number(r.QTY_SOH || r.SOH || 0);
+    });
+
+    // Hitung Qty Repack total dari processedList
+    processedList.forEach(p => {
+        totalQtyRepackAll += Number(p.QTY_REPACKING_TOKO || p.QTY_REPACK || 0);
+    });
 
     Object.keys(allStoresMap).forEach(kdStore => {
         const storeName = allStoresMap[kdStore];
+        const isJuiceActive = isStoreJuiceActive(kdStore);
+
         mapping.forEach(m => {
-            const pluAsal = String(m.PLU_ASAL || m.PLU_RAW).trim();
-            const pluHasil = String(m.PLU || m.PLU_PROCESSED).trim();
+            const pluAsal = String(m.PLU_ASAL || m.PLU_RAW || '').trim();
+            const pluHasil = String(m.PLU || m.PLU_PROCESSED || '').trim();
 
             const rawItem = rawLookup.get(`${kdStore}___${pluAsal}`);
             const procItem = procLookup.get(`${kdStore}___${pluHasil}`);
@@ -1909,49 +2155,49 @@ function renderRepack(container) {
             if (sohRaw > 0 || qtyRepack > 0 || qtySales > 0) {
                 let ratioRepackSales = qtySales > 0 ? (qtyRepack / qtySales) * 100 : (qtyRepack > 0 ? 100 : 0);
                 repackStoreRows.push({
-                    kdStore, storeName, pluAsal,
-                    descAsal: m.DESC_ASAL || rawItem?.DESCP || 'Raw Material',
-                    sohRaw, pluHasil,
-                    descHasil: m.DESC || procItem?.DESCP || 'Hasil Repack',
-                    qtyRepack, qtySales, ratioRepackSales,
-                    procItem
+                    kdStore,
+                    storeName,
+                    pluAsal,
+                    descAsal: rawItem?.DESCP || m.NAMA_RAW || m.DESCP_ASAL || 'Raw Material',
+                    pluHasil,
+                    descHasil: procItem?.DESCP || m.NAMA_PROCESSED || m.DESCP_HASIL || 'Processed Fruit',
+                    sohRaw,
+                    qtyRepack,
+                    qtySales,
+                    ratioRepackSales,
+                    isJuiceActive
                 });
             }
         });
     });
 
-    // Apply interactive column sort for Repack table
     repackStoreRows = sortDataset(repackStoreRows, APP_STATE.sort.repack);
 
-    const totalSohRaw = rawList.reduce((a, b) => a + parseIndonesianNumber(b.OHTOKO ?? 0), 0);
-    const totalQtyRepack = processedList.reduce((a, b) => a + parseIndonesianNumber(b.QTY_REPACKING_TOKO ?? 0), 0);
-    const alertZeroCount = repackStoreRows.filter(r => r.qtyRepack === 0 && r.sohRaw > 0).length;
-
     container.innerHTML = `
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 mb-5">
-            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-emerald-500 shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Qty Repack</span>
-                <h3 class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">${totalQtyRepack.toLocaleString('id-ID')} Pcs</h3>
-                <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">Hasil Repacking Toko</p>
-            </div>
-
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 mb-5">
             <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-amber-500 shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total SOH Bahan (Raw)</span>
-                <h3 class="text-base sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-0.5 truncate">${totalSohRaw.toLocaleString('id-ID')} Pcs/Kg</h3>
-                <p class="text-[10px] sm:text-xs text-amber-500 mt-0.5 font-bold">Stok Bahan Baku</p>
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total On Hand Raw (Kg/Unit)</span>
+                <h3 class="text-base sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-0.5 truncate">${totalSohRawAll.toLocaleString('id-ID')}</h3>
+                <p class="text-[10px] sm:text-xs text-amber-500 font-bold mt-0.5">Sumber: Sheet RAW</p>
             </div>
 
-            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-rose-500 shadow-sm col-span-2 sm:col-span-1">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Indikasi Belum Repack</span>
-                <h3 class="text-base sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-0.5 truncate">${alertZeroCount} Item/Toko</h3>
-                <p class="text-[10px] sm:text-xs text-rose-500 mt-0.5 font-bold">SOH Ada, Repack 0</p>
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-emerald-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Qty Repack (Pcs)</span>
+                <h3 class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">${totalQtyRepackAll.toLocaleString('id-ID')}</h3>
+                <p class="text-[10px] sm:text-xs text-emerald-500 font-bold mt-0.5">Sumber: Sheet PROCESSED</p>
+            </div>
+
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-indigo-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Item Repack Aktif</span>
+                <h3 class="text-base sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5 truncate">${repackStoreRows.length} Line</h3>
+                <p class="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">Pemetaan Mapping PLU</p>
             </div>
         </div>
 
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
             <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Rincian Audit Repacking Toko</h4>
-                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full">${repackStoreRows.length} Item Audit</span>
+                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Monitoring Repacking & Administrasi Toko</h4>
+                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full">${repackStoreRows.length} Baris</span>
             </div>
 
             <div class="data-table-container">
@@ -1959,12 +2205,11 @@ function renderRepack(container) {
                     <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 uppercase tracking-wider text-[9px] sm:text-[10px]">
                         <tr>
                             <th onclick="handleSort('repack', 'storeName')" class="sortable-header px-3 sm:px-5 py-2.5">Toko ${getSortHeaderIcon('repack', 'storeName')}</th>
-                            <th onclick="handleSort('repack', 'descAsal')" class="sortable-header px-3 sm:px-5 py-2.5">Bahan Baku (Raw) ${getSortHeaderIcon('repack', 'descAsal')}</th>
-                            <th onclick="handleSort('repack', 'sohRaw')" class="sortable-header px-3 sm:px-5 py-2.5 text-right">SOH Raw ${getSortHeaderIcon('repack', 'sohRaw')}</th>
-                            <th onclick="handleSort('repack', 'descHasil')" class="sortable-header px-3 sm:px-5 py-2.5">Produk Olahan ${getSortHeaderIcon('repack', 'descHasil')}</th>
+                            <th onclick="handleSort('repack', 'descAsal')" class="sortable-header px-3 sm:px-5 py-2.5">Bahan Mentah (RAW) ${getSortHeaderIcon('repack', 'descAsal')}</th>
+                            <th onclick="handleSort('repack', 'descHasil')" class="sortable-header px-3 sm:px-5 py-2.5">Hasil Repack (PROCESSED) ${getSortHeaderIcon('repack', 'descHasil')}</th>
+                            <th onclick="handleSort('repack', 'sohRaw')" class="sortable-header px-3 sm:px-5 py-2.5 text-right bg-amber-50/50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400">On Hand Raw ${getSortHeaderIcon('repack', 'sohRaw')}</th>
                             <th onclick="handleSort('repack', 'qtyRepack')" class="sortable-header px-3 sm:px-5 py-2.5 text-right bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">Qty Repack ${getSortHeaderIcon('repack', 'qtyRepack')}</th>
                             <th onclick="handleSort('repack', 'qtySales')" class="sortable-header px-3 sm:px-5 py-2.5 text-right">Qty Sales ${getSortHeaderIcon('repack', 'qtySales')}</th>
-                            <th onclick="handleSort('repack', 'ratioRepackSales')" class="sortable-header px-3 sm:px-5 py-2.5 text-right font-black">% Repack/Sales ${getSortHeaderIcon('repack', 'ratioRepackSales')}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -1986,147 +2231,91 @@ function renderRepack(container) {
 
 function renderRepackTableRows(data) {
     if (!data || data.length === 0) {
-        return `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-semibold">Tidak ada data audit repacking.</td></tr>`;
+        return `<tr><td colspan="6" class="text-center py-8 text-slate-400 font-semibold">Tidak ada data repacking.</td></tr>`;
     }
 
     const start = (APP_STATE.pagination.repackPage - 1) * APP_STATE.pagination.limit;
     const pageItems = data.slice(start, start + APP_STATE.pagination.limit);
 
     return pageItems.map(item => {
-        const isJuiceActive = isStoreJuiceActive(item.kdStore);
-        const juiceStatusTag = !isJuiceActive ? `<span class="text-[9px] font-bold text-rose-500 dark:text-rose-400 block mt-0.5">Toko Tidak Aktif Juice</span>` : '';
+        const juiceActiveTag = item.isJuiceActive 
+            ? `<span class="bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[9px] px-1.5 py-0.5 rounded font-bold ml-1">Aktif Juice</span>`
+            : `<span class="bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-[9px] px-1.5 py-0.5 rounded font-bold ml-1">Tidak Aktif Juice</span>`;
 
         return `
             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
                 <td class="px-3 sm:px-5 py-3">
-                    <p class="font-extrabold text-slate-800 dark:text-slate-100">${item.storeName}</p>
+                    <div class="flex items-center flex-wrap gap-1">
+                        <p class="font-extrabold text-slate-800 dark:text-slate-100">${item.storeName}</p>
+                        ${juiceActiveTag}
+                    </div>
                     <span class="text-[10px] text-slate-400 font-medium">${item.kdStore}</span>
-                    ${juiceStatusTag}
                 </td>
                 <td class="px-3 sm:px-5 py-3">
                     <p class="font-extrabold text-slate-800 dark:text-slate-200">${item.descAsal}</p>
-                    <span class="text-[10px] text-amber-600 dark:text-amber-400 font-mono font-bold">PLU: ${item.pluAsal}</span>
+                    <span class="text-[10px] text-amber-600 dark:text-amber-400 font-mono font-bold">PLU RAW: ${item.pluAsal}</span>
                 </td>
-                <td class="px-3 sm:px-5 py-3 text-right font-black text-amber-600 dark:text-amber-400">${item.sohRaw.toLocaleString('id-ID')}</td>
                 <td class="px-3 sm:px-5 py-3">
                     <p class="font-extrabold text-slate-800 dark:text-slate-200">${item.descHasil}</p>
-                    <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">PLU: ${item.pluHasil}</span>
+                    <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">PLU CUT: ${item.pluHasil}</span>
                 </td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black text-amber-600 dark:text-amber-400 bg-amber-50/30 dark:bg-amber-950/10">${item.sohRaw.toLocaleString('id-ID')}</td>
                 <td class="px-3 sm:px-5 py-3 text-right font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/10">${item.qtyRepack.toLocaleString('id-ID')}</td>
-                <td class="px-3 sm:px-5 py-3 text-right font-black text-slate-700 dark:text-slate-300">${item.qtySales.toLocaleString('id-ID')}</td>
-                <td class="px-3 sm:px-5 py-3 text-right font-black text-blue-600 dark:text-blue-400">${item.ratioRepackSales.toFixed(1)}%</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-bold text-slate-700 dark:text-slate-300">${item.qtySales.toLocaleString('id-ID')}</td>
             </tr>
         `;
     }).join('');
 }
 
-window.changePage = function(delta) {
-    const pData = APP_STATE.filtered.processed.filter(isCfOrJuiceItem);
-    const maxPage = Math.ceil(pData.length / APP_STATE.pagination.limit) || 1;
-    APP_STATE.pagination.page = Math.max(1, Math.min(maxPage, APP_STATE.pagination.page + delta));
-    renderView();
-};
-
-window.changeWastePage = function(delta) {
-    const totalItems = APP_STATE.filtered.processed.length + APP_STATE.filtered.raw_fruit.length;
-    const maxPage = Math.ceil(totalItems / APP_STATE.pagination.limit) || 1;
-    APP_STATE.pagination.wastePage = Math.max(1, Math.min(maxPage, APP_STATE.pagination.wastePage + delta));
-    renderView();
-};
-
-window.changeRepackPage = function(delta) {
-    APP_STATE.pagination.repackPage = Math.max(1, APP_STATE.pagination.repackPage + delta);
-    renderView();
-};
-
-window.changeKoreksiPage = function(delta) {
-    const maxPage = Math.ceil((APP_STATE.filtered.koreksi || []).length / APP_STATE.pagination.limit) || 1;
-    APP_STATE.pagination.koreksiPage = Math.max(1, Math.min(maxPage, APP_STATE.pagination.koreksiPage + delta));
-    renderView();
-};
-
-window.changeDiscountPage = function(delta) {
-    const dData = APP_STATE.filtered.processed.filter(isDiscountFruitItem);
-    const maxPage = Math.ceil(dData.length / APP_STATE.pagination.limit) || 1;
-    APP_STATE.pagination.discountPage = Math.max(1, Math.min(maxPage, APP_STATE.pagination.discountPage + delta));
-    renderView();
-};
-
 function renderKoreksi(container) {
-    let kData = APP_STATE.filtered.koreksi || [];
+    let kData = APP_STATE.filtered.koreksi;
 
-    let totalRp = 0, totalQty = 0;
-    let fruitRp = 0, fruitQty = 0;
-    let vegRp = 0, vegQty = 0;
+    let totFruitRp = 0, totFruitQty = 0;
+    let totVegRp = 0, totVegQty = 0;
 
     kData.forEach(item => {
         const rp = Number(item.RP_KOREKSI || 0);
         const qty = Number(item.QTY_KOREKSI || 0);
-        totalRp += rp;
-        totalQty += qty;
 
         if (item.CATEGORY_TYPE === 'VEGETABLE') {
-            vegRp += rp;
-            vegQty += qty;
+            totVegRp += rp;
+            totVegQty += qty;
         } else {
-            fruitRp += rp;
-            fruitQty += qty;
+            totFruitRp += rp;
+            totFruitQty += qty;
         }
     });
+
+    const netKoreksiRp = totFruitRp + totVegRp;
+    const netKoreksiQty = totFruitQty + totVegQty;
 
     kData = sortDataset(kData, APP_STATE.sort.koreksi);
 
     container.innerHTML = `
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-5">
-            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-purple-500 shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Koreksi (Buah & Sayur)</span>
-                <h3 class="text-base sm:text-2xl font-black text-purple-600 dark:text-purple-400 mt-0.5 truncate">${formatSignedRupiah(totalRp)}</h3>
-                <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">${formatSignedQty(totalQty)} Total Qty</p>
-            </div>
-
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4 mb-5">
             <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-emerald-500 shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Koreksi Buah (Dept > 652)</span>
-                <h3 class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">${formatSignedRupiah(fruitRp)}</h3>
-                <p class="text-[10px] sm:text-xs text-emerald-500 mt-0.5 font-bold">${formatSignedQty(fruitQty)} Qty</p>
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Koreksi Buah (DEPT > 652)</span>
+                <h3 class="text-base sm:text-2xl font-black ${totFruitRp >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'} mt-0.5 truncate">${formatSignedRupiah(totFruitRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-slate-400 font-bold mt-0.5">Qty: ${formatSignedQty(totFruitQty)}</p>
             </div>
 
             <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-amber-500 shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Koreksi Sayur (Dept 651)</span>
-                <h3 class="text-base sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-0.5 truncate">${formatSignedRupiah(vegRp)}</h3>
-                <p class="text-[10px] sm:text-xs text-amber-500 mt-0.5 font-bold">${formatSignedQty(vegQty)} Qty</p>
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Koreksi Sayur (DEPT 651)</span>
+                <h3 class="text-base sm:text-2xl font-black ${totVegRp >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'} mt-0.5 truncate">${formatSignedRupiah(totVegRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-amber-500 font-bold mt-0.5">Qty: ${formatSignedQty(totVegQty)}</p>
             </div>
 
-            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-indigo-500 shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Transaksi Koreksi</span>
-                <h3 class="text-base sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5">${kData.length} Records</h3>
-                <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">Monitoring Penyesuaian</p>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-            <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div class="flex items-center justify-between mb-3">
-                    <h4 class="font-black text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">
-                        🏪 Top 10 Toko Nilai Koreksi
-                    </h4>
-                </div>
-                <div class="chart-container"><canvas id="chart-koreksi-stores"></canvas></div>
-            </div>
-
-            <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div class="flex items-center justify-between mb-3">
-                    <h4 class="font-black text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">
-                        🥬 Top 10 Produk Koreksi Terbesar
-                    </h4>
-                </div>
-                <div class="chart-container"><canvas id="chart-koreksi-products"></canvas></div>
+            <div class="col-span-2 lg:col-span-1 kpi-card bg-slate-900 text-white border border-slate-800 border-t-4 border-t-indigo-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Net Koreksi</span>
+                <h3 class="text-base sm:text-2xl font-black ${netKoreksiRp >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-0.5 truncate">${formatSignedRupiah(netKoreksiRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-indigo-300 font-bold mt-0.5">Net Qty: ${formatSignedQty(netKoreksiQty)}</p>
             </div>
         </div>
 
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
             <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Rincian Transaksi Koreksi Buah & Sayur</h4>
-                <span class="text-[10px] font-bold text-purple-600 bg-purple-50 dark:bg-purple-950 px-2 py-0.5 rounded-full">${kData.length} Item</span>
+                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Rincian Koreksi Buah & Sayur</h4>
+                <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-full">${kData.length} Record</span>
             </div>
 
             <div class="data-table-container">
@@ -2134,10 +2323,10 @@ function renderKoreksi(container) {
                     <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 uppercase tracking-wider text-[9px] sm:text-[10px]">
                         <tr>
                             <th onclick="handleSort('koreksi', 'NAMA_STORE')" class="sortable-header px-3 sm:px-5 py-2.5">Toko ${getSortHeaderIcon('koreksi', 'NAMA_STORE')}</th>
-                            <th onclick="handleSort('koreksi', 'DESCP')" class="sortable-header px-3 sm:px-5 py-2.5">PLU & Deskripsi ${getSortHeaderIcon('koreksi', 'DESCP')}</th>
+                            <th onclick="handleSort('koreksi', 'DESCP')" class="sortable-header px-3 sm:px-5 py-2.5">PLU & Produk ${getSortHeaderIcon('koreksi', 'DESCP')}</th>
                             <th onclick="handleSort('koreksi', 'CATEGORY_TYPE')" class="sortable-header px-3 sm:px-5 py-2.5 text-center">Kategori ${getSortHeaderIcon('koreksi', 'CATEGORY_TYPE')}</th>
                             <th onclick="handleSort('koreksi', 'QTY_KOREKSI')" class="sortable-header px-3 sm:px-5 py-2.5 text-right">Qty Koreksi ${getSortHeaderIcon('koreksi', 'QTY_KOREKSI')}</th>
-                            <th onclick="handleSort('koreksi', 'RP_KOREKSI')" class="sortable-header px-3 sm:px-5 py-2.5 text-right bg-purple-50/50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400">Rp Koreksi ${getSortHeaderIcon('koreksi', 'RP_KOREKSI')}</th>
+                            <th onclick="handleSort('koreksi', 'RP_KOREKSI')" class="sortable-header px-3 sm:px-5 py-2.5 text-right bg-slate-100 dark:bg-slate-800">Rp Koreksi ${getSortHeaderIcon('koreksi', 'RP_KOREKSI')}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -2155,8 +2344,6 @@ function renderKoreksi(container) {
             </div>
         </div>
     `;
-
-    renderKoreksiCharts(kData);
 }
 
 function renderKoreksiTableRows(data) {
@@ -2168,160 +2355,78 @@ function renderKoreksiTableRows(data) {
     const pageItems = data.slice(start, start + APP_STATE.pagination.limit);
 
     return pageItems.map(item => {
-        let catBadge = `<span class="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full">BUAH</span>`;
-        if (item.CATEGORY_TYPE === 'VEGETABLE') {
-            catBadge = `<span class="bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full">SAYUR</span>`;
-        }
+        const isVeg = item.CATEGORY_TYPE === 'VEGETABLE';
+        const typeBadge = isVeg 
+            ? `<span class="bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full">Sayur (651)</span>`
+            : `<span class="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full">Buah (652+)</span>`;
 
-        const rpVal = Number(item.RP_KOREKSI || 0);
-        const qtyVal = Number(item.QTY_KOREKSI || 0);
-        const rpClass = rpVal > 0 ? 'text-emerald-600 dark:text-emerald-400' : (rpVal < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-600');
+        const rpVal = item.RP_KOREKSI || 0;
+        const qtyVal = item.QTY_KOREKSI || 0;
+        const colorClass = rpVal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
 
         return `
             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
                 <td class="px-3 sm:px-5 py-3">
-                    <p class="font-extrabold text-slate-800 dark:text-slate-100">${item.NAMA_STORE || item.KD_STORE}</p>
+                    <p class="font-extrabold text-slate-800 dark:text-slate-100">${item.NAMA_STORE}</p>
                     <span class="text-[10px] text-slate-400 font-medium">${item.KD_STORE}</span>
                 </td>
                 <td class="px-3 sm:px-5 py-3">
                     <p class="font-extrabold text-slate-800 dark:text-slate-200">${item.DESCP}</p>
-                    <span class="text-[10px] text-purple-600 dark:text-purple-400 font-mono font-bold">PLU: ${item.PLU}</span>
+                    <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-mono font-bold">PLU: ${item.PLU}</span>
                 </td>
-                <td class="px-3 sm:px-5 py-3 text-center">${catBadge}</td>
-                <td class="px-3 sm:px-5 py-3 text-right font-black text-slate-700 dark:text-slate-300">${formatSignedQty(qtyVal)}</td>
-                <td class="px-3 sm:px-5 py-3 text-right font-black ${rpClass} bg-purple-50/30 dark:bg-purple-950/10">${formatSignedRupiah(rpVal)}</td>
+                <td class="px-3 sm:px-5 py-3 text-center">${typeBadge}</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black ${colorClass}">${formatSignedQty(qtyVal)}</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black ${colorClass} bg-slate-50/50 dark:bg-slate-800/20">${formatSignedRupiah(rpVal)}</td>
             </tr>
         `;
     }).join('');
 }
 
-function renderKoreksiCharts(kData) {
-    const storeMap = {};
-    const prodMap = {};
-
-    kData.forEach(item => {
-        const storeName = item.NAMA_STORE || item.KD_STORE || 'Store';
-        const prodName = item.DESCP || item.PLU || 'Item';
-        const rp = Math.abs(Number(item.RP_KOREKSI || 0));
-
-        storeMap[storeName] = (storeMap[storeName] || 0) + rp;
-        prodMap[prodName] = (prodMap[prodName] || 0) + rp;
-    });
-
-    const topStores = Object.entries(storeMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
-    const topProducts = Object.entries(prodMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
-
-    const isDark = APP_STATE.isDarkMode;
-    const labelColor = isDark ? '#cbd5e1' : '#475569';
-    const gridColor = isDark ? 'rgba(51, 65, 85, 0.4)' : 'rgba(226, 232, 240, 0.6)';
-
-    const ctxStores = document.getElementById('chart-koreksi-stores');
-    if (ctxStores && topStores.length > 0) {
-        APP_STATE.chartInstances.koreksiStores = new Chart(ctxStores, {
-            type: 'bar',
-            data: {
-                labels: topStores.map(s => truncateLabel(s[0])),
-                datasets: [{ label: 'Rp Koreksi', data: topStores.map(s => s[1]), backgroundColor: '#a855f7', borderRadius: 6, barThickness: 14 }]
-            },
-            options: {
-                indexAxis: 'y',
-                maintainAspectRatio: false,
-                layout: { padding: { right: 20, left: 10 } },
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { color: gridColor }, ticks: { color: labelColor, font: { size: 10 }, callback: v => formatRupiah(v) } },
-                    y: { grid: { display: false }, ticks: { color: labelColor, font: { size: 10, weight: 'bold' }, autoSkip: false } }
-                }
-            }
-        });
-    }
-
-    const ctxProducts = document.getElementById('chart-koreksi-products');
-    if (ctxProducts && topProducts.length > 0) {
-        APP_STATE.chartInstances.koreksiProducts = new Chart(ctxProducts, {
-            type: 'bar',
-            data: {
-                labels: topProducts.map(p => truncateLabel(p[0])),
-                datasets: [{ label: 'Rp Koreksi', data: topProducts.map(p => p[1]), backgroundColor: '#ec4899', borderRadius: 6, barThickness: 14 }]
-            },
-            options: {
-                indexAxis: 'y',
-                maintainAspectRatio: false,
-                layout: { padding: { right: 20, left: 10 } },
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { color: gridColor }, ticks: { color: labelColor, font: { size: 10 }, callback: v => formatRupiah(v) } },
-                    y: { grid: { display: false }, ticks: { color: labelColor, font: { size: 10, weight: 'bold' }, autoSkip: false } }
-                }
-            }
-        });
-    }
-}
-
 function renderDiscountFruit(container) {
-    let dData = APP_STATE.filtered.processed.filter(isDiscountFruitItem);
+    let combinedList = APP_STATE.filtered.processed.concat(APP_STATE.filtered.raw_fruit);
+    let dData = combinedList.filter(isDiscountFruitItem);
 
     let totalSalesRp = 0, totalQtySales = 0, totalMarginRp = 0;
+
     dData.forEach(item => {
-        totalSalesRp += Number(item.RP_SALES || 0);
-        totalQtySales += Number(item.QTY_SALES || 0);
-        totalMarginRp += Number(item.RP_MARGIN || 0);
+        const rp = Number(item.RP_SALES || 0);
+        const qty = Number(item.QTY_SALES || 0);
+        const margin = Number(item.RP_MARGIN || 0);
+
+        totalSalesRp += rp;
+        totalQtySales += qty;
+        totalMarginRp += margin;
     });
 
+    const overallMarginPct = totalSalesRp > 0 ? (totalMarginRp / totalSalesRp) * 100 : 0;
+
     dData = sortDataset(dData, APP_STATE.sort.discount);
-    const activeStoresCount = new Set(dData.map(x => x.KD_STORE).filter(Boolean)).size;
 
     container.innerHTML = `
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-5">
-            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-amber-500 shadow-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 mb-5">
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-rose-500 shadow-sm">
                 <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Sales Buah Diskon</span>
-                <h3 class="text-base sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-0.5 truncate">${formatRupiah(totalSalesRp)}</h3>
-                <p class="text-[10px] sm:text-xs text-amber-500 font-bold mt-0.5">${totalQtySales.toLocaleString('id-ID')} Pcs Sales</p>
-            </div>
-
-            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-emerald-500 shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Margin Diskon</span>
-                <h3 class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">${formatRupiah(totalMarginRp)}</h3>
-                <p class="text-[10px] sm:text-xs text-emerald-500 font-bold mt-0.5">Rp Profit Diskon</p>
-            </div>
-
-            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-indigo-500 shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Toko Penjual Diskon</span>
-                <h3 class="text-base sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5">${activeStoresCount} Toko</h3>
-                <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">Aktif Buah Diskon</p>
+                <h3 class="text-base sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-0.5 truncate">${formatRupiah(totalSalesRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">${totalQtySales.toLocaleString('id-ID')} Pcs/Kg</p>
             </div>
 
             <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-teal-500 shadow-sm">
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Items Diskon</span>
-                <h3 class="text-base sm:text-2xl font-black text-teal-600 dark:text-teal-400 mt-0.5">${dData.length} Records</h3>
-                <p class="text-[10px] sm:text-xs text-slate-400 mt-0.5 font-medium">Master/PLU Diskon</p>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-            <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div class="flex items-center justify-between mb-3">
-                    <h4 class="font-black text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">
-                        🏪 Top 10 Toko Penjualan Buah Diskon
-                    </h4>
-                </div>
-                <div class="chart-container"><canvas id="chart-discount-stores"></canvas></div>
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Rp Margin</span>
+                <h3 class="text-base sm:text-2xl font-black text-teal-600 dark:text-teal-400 mt-0.5 truncate">${formatRupiah(totalMarginRp)}</h3>
+                <p class="text-[10px] sm:text-xs text-teal-500 font-extrabold">Profit Buah Diskon</p>
             </div>
 
-            <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div class="flex items-center justify-between mb-3">
-                    <h4 class="font-black text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">
-                        🏷️ Top 10 Produk Buah Diskon
-                    </h4>
-                </div>
-                <div class="chart-container"><canvas id="chart-discount-products"></canvas></div>
+            <div class="kpi-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-t-4 border-t-indigo-500 shadow-sm">
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">% Margin Rata-Rata</span>
+                <h3 class="text-base sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5 truncate">${overallMarginPct.toFixed(1)}%</h3>
+                <p class="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">Persentase GM Diskon</p>
             </div>
         </div>
 
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
             <div class="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Rincian Penjualan Buah Diskon</h4>
-                <span class="text-[10px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-950 px-2 py-0.5 rounded-full">${dData.length} Item</span>
+                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Rincian Sales Buah Diskon</h4>
+                <span class="text-[10px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-950 px-2 py-0.5 rounded-full">${dData.length} Item</span>
             </div>
 
             <div class="data-table-container">
@@ -2329,10 +2434,11 @@ function renderDiscountFruit(container) {
                     <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold sticky top-0 uppercase tracking-wider text-[9px] sm:text-[10px]">
                         <tr>
                             <th onclick="handleSort('discount', 'NAMA_STORE')" class="sortable-header px-3 sm:px-5 py-2.5">Toko ${getSortHeaderIcon('discount', 'NAMA_STORE')}</th>
-                            <th onclick="handleSort('discount', 'DESCP')" class="sortable-header px-3 sm:px-5 py-2.5">PLU & Item Diskon ${getSortHeaderIcon('discount', 'DESCP')}</th>
-                            <th onclick="handleSort('discount', 'QTY_SALES')" class="sortable-header px-3 sm:px-5 py-2.5 text-right">Qty Sales ${getSortHeaderIcon('discount', 'QTY_SALES')}</th>
-                            <th onclick="handleSort('discount', 'RP_SALES')" class="sortable-header px-3 sm:px-5 py-2.5 text-right bg-amber-50/50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400">Rp Sales ${getSortHeaderIcon('discount', 'RP_SALES')}</th>
+                            <th onclick="handleSort('discount', 'DESCP')" class="sortable-header px-3 sm:px-5 py-2.5">PLU & Produk Diskon ${getSortHeaderIcon('discount', 'DESCP')}</th>
+                            <th onclick="handleSort('discount', 'QTY_SALES')" class="sortable-header px-3 sm:px-5 py-2.5 text-right">Qty ${getSortHeaderIcon('discount', 'QTY_SALES')}</th>
+                            <th onclick="handleSort('discount', 'RP_SALES')" class="sortable-header px-3 sm:px-5 py-2.5 text-right bg-rose-50/50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400">Rp Sales ${getSortHeaderIcon('discount', 'RP_SALES')}</th>
                             <th onclick="handleSort('discount', 'RP_MARGIN')" class="sortable-header px-3 sm:px-5 py-2.5 text-right">Rp Margin ${getSortHeaderIcon('discount', 'RP_MARGIN')}</th>
+                            <th onclick="handleSort('discount', 'MARGIN')" class="sortable-header px-3 sm:px-5 py-2.5 text-right font-black text-indigo-600 dark:text-indigo-400">% Margin ${getSortHeaderIcon('discount', 'MARGIN')}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -2350,13 +2456,11 @@ function renderDiscountFruit(container) {
             </div>
         </div>
     `;
-
-    renderDiscountCharts(dData);
 }
 
 function renderDiscountTableRows(data) {
     if (!data || data.length === 0) {
-        return `<tr><td colspan="5" class="text-center py-8 text-slate-400 font-semibold">Tidak ada data penjualan buah diskon.</td></tr>`;
+        return `<tr><td colspan="6" class="text-center py-8 text-slate-400 font-semibold">Tidak ada data penjualan buah diskon.</td></tr>`;
     }
 
     const start = (APP_STATE.pagination.discountPage - 1) * APP_STATE.pagination.limit;
@@ -2365,106 +2469,138 @@ function renderDiscountTableRows(data) {
     return pageItems.map(item => {
         const rpSales = Number(item.RP_SALES || 0);
         const rpMargin = Number(item.RP_MARGIN || 0);
+        const pctMargin = rpSales > 0 ? (rpMargin / rpSales) * 100 : Number(item.MARGIN || 0);
 
         return `
             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
                 <td class="px-3 sm:px-5 py-3">
                     <p class="font-extrabold text-slate-800 dark:text-slate-100">${item.NAMA_STORE || item.KD_STORE}</p>
-                    <span class="text-[10px] text-slate-400 font-medium">${item.KD_STORE}</span>
+                    <span class="text-[10px] text-slate-400 font-medium">${item.KD_STORE || ''}</span>
                 </td>
                 <td class="px-3 sm:px-5 py-3">
                     <p class="font-extrabold text-slate-800 dark:text-slate-200">${item.DESCP || item.PLU}</p>
-                    <span class="text-[10px] text-amber-600 dark:text-amber-400 font-mono font-bold">PLU: ${item.PLU}</span>
+                    <span class="text-[10px] text-rose-600 dark:text-rose-400 font-mono font-bold">PLU: ${item.PLU}</span>
                 </td>
                 <td class="px-3 sm:px-5 py-3 text-right font-black text-slate-700 dark:text-slate-300">${Number(item.QTY_SALES || 0).toLocaleString('id-ID')}</td>
-                <td class="px-3 sm:px-5 py-3 text-right font-black text-amber-600 dark:text-amber-400 bg-amber-50/30 dark:bg-amber-950/10">${formatRupiah(rpSales)}</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black text-rose-600 dark:text-rose-400 bg-rose-50/30 dark:bg-rose-950/10">${formatRupiah(rpSales)}</td>
                 <td class="px-3 sm:px-5 py-3 text-right font-bold text-slate-600 dark:text-slate-400">${formatRupiah(rpMargin)}</td>
+                <td class="px-3 sm:px-5 py-3 text-right font-black text-indigo-600 dark:text-indigo-400">${pctMargin.toFixed(1)}%</td>
             </tr>
         `;
     }).join('');
 }
 
-function renderDiscountCharts(dData) {
-    const storeMap = {};
-    const prodMap = {};
+window.changePage = function(delta) {
+    const max = Math.ceil(APP_STATE.filtered.processed.length / APP_STATE.pagination.limit) || 1;
+    APP_STATE.pagination.page = Math.min(Math.max(1, APP_STATE.pagination.page + delta), max);
+    renderView();
+};
 
-    dData.forEach(item => {
-        const storeName = item.NAMA_STORE || item.KD_STORE || 'Store';
-        const prodName = item.DESCP || item.PLU || 'Item';
-        const sales = Number(item.RP_SALES || 0);
+window.changeSalesFruitPage = function(delta) {
+    const max = Math.ceil(APP_STATE.filtered.raw_fruit.length / APP_STATE.pagination.limit) || 1;
+    APP_STATE.pagination.salesFruitPage = Math.min(Math.max(1, APP_STATE.pagination.salesFruitPage + delta), max);
+    renderView();
+};
 
-        storeMap[storeName] = (storeMap[storeName] || 0) + sales;
-        prodMap[prodName] = (prodMap[prodName] || 0) + sales;
-    });
+window.changeWastePage = function(delta) {
+    let combinedCount = APP_STATE.filtered.processed.length + APP_STATE.filtered.raw_fruit.length;
+    const max = Math.ceil(combinedCount / APP_STATE.pagination.limit) || 1;
+    APP_STATE.pagination.wastePage = Math.min(Math.max(1, APP_STATE.pagination.wastePage + delta), max);
+    renderView();
+};
 
-    const topStores = Object.entries(storeMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
-    const topProducts = Object.entries(prodMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+window.changeRepackPage = function(delta) {
+    const max = Math.ceil(APP_STATE.raw.mapping.length / APP_STATE.pagination.limit) || 1;
+    APP_STATE.pagination.repackPage = Math.min(Math.max(1, APP_STATE.pagination.repackPage + delta), max);
+    renderView();
+};
 
-    const isDark = APP_STATE.isDarkMode;
-    const labelColor = isDark ? '#cbd5e1' : '#475569';
-    const gridColor = isDark ? 'rgba(51, 65, 85, 0.4)' : 'rgba(226, 232, 240, 0.6)';
+window.changeKoreksiPage = function(delta) {
+    const max = Math.ceil(APP_STATE.filtered.koreksi.length / APP_STATE.pagination.limit) || 1;
+    APP_STATE.pagination.koreksiPage = Math.min(Math.max(1, APP_STATE.pagination.koreksiPage + delta), max);
+    renderView();
+};
 
-    const ctxStores = document.getElementById('chart-discount-stores');
-    if (ctxStores && topStores.length > 0) {
-        APP_STATE.chartInstances.discountStores = new Chart(ctxStores, {
-            type: 'bar',
-            data: {
-                labels: topStores.map(s => truncateLabel(s[0])),
-                datasets: [{ label: 'Sales Diskon (Rp)', data: topStores.map(s => s[1]), backgroundColor: '#f59e0b', borderRadius: 6, barThickness: 14 }]
-            },
-            options: {
-                indexAxis: 'y',
-                maintainAspectRatio: false,
-                layout: { padding: { right: 20, left: 10 } },
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { color: gridColor }, ticks: { color: labelColor, font: { size: 10 }, callback: v => formatRupiah(v) } },
-                    y: { grid: { display: false }, ticks: { color: labelColor, font: { size: 10, weight: 'bold' }, autoSkip: false } }
-                }
-            }
-        });
-    }
-
-    const ctxProducts = document.getElementById('chart-discount-products');
-    if (ctxProducts && topProducts.length > 0) {
-        APP_STATE.chartInstances.discountProducts = new Chart(ctxProducts, {
-            type: 'bar',
-            data: {
-                labels: topProducts.map(p => truncateLabel(p[0])),
-                datasets: [{ label: 'Sales Diskon (Rp)', data: topProducts.map(p => p[1]), backgroundColor: '#d97706', borderRadius: 6, barThickness: 14 }]
-            },
-            options: {
-                indexAxis: 'y',
-                maintainAspectRatio: false,
-                layout: { padding: { right: 20, left: 10 } },
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { color: gridColor }, ticks: { color: labelColor, font: { size: 10 }, callback: v => formatRupiah(v) } },
-                    y: { grid: { display: false }, ticks: { color: labelColor, font: { size: 10, weight: 'bold' }, autoSkip: false } }
-                }
-            }
-        });
-    }
-}
+window.changeDiscountPage = function(delta) {
+    const combinedList = APP_STATE.filtered.processed.concat(APP_STATE.filtered.raw_fruit);
+    const dData = combinedList.filter(isDiscountFruitItem);
+    const max = Math.ceil(dData.length / APP_STATE.pagination.limit) || 1;
+    APP_STATE.pagination.discountPage = Math.min(Math.max(1, APP_STATE.pagination.discountPage + delta), max);
+    renderView();
+};
 
 window.exportToExcel = function() {
     let exportData = [];
-    let fileName = `Export_${APP_STATE.activeView}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    let fileName = `Cut_Fruit_Dashboard_${APP_STATE.activeView}_${getTodayKey()}.xlsx`;
 
     if (APP_STATE.activeView === 'sales') {
-        exportData = APP_STATE.filtered.processed.filter(isCfOrJuiceItem);
+        exportData = APP_STATE.filtered.processed.filter(isCfOrJuiceItem).map(x => ({
+            "Toko": x.NAMA_STORE || x.KD_STORE,
+            "Kode Toko": x.KD_STORE,
+            "AM": x.AM,
+            "AC": x.AC,
+            "PLU": x.PLU,
+            "Deskripsi": x.DESCP,
+            "Qty Sales": Number(x.QTY_SALES || 0),
+            "Rp Sales": Number(x.RP_SALES || 0),
+            "Rp Margin": Number(x.RP_MARGIN || 0),
+            "% Margin": Number(x.MARGIN || 0)
+        }));
+    } else if (APP_STATE.activeView === 'sales_fruit') {
+        exportData = APP_STATE.filtered.raw_fruit.map(x => ({
+            "Toko": x.NAMA_STORE || x.KD_STORE,
+            "Kode Toko": x.KD_STORE,
+            "AM": x.AM,
+            "AC": x.AC,
+            "PLU": x.PLU,
+            "Deskripsi": x.DESCP,
+            "Qty Sales": Number(x.QTY_SALES || 0),
+            "Rp Sales": Number(x.RP_SALES || 0),
+            "Rp Margin": Number(x.RP_MARGIN || 0),
+            "% Margin": Number(x.MARGIN || 0)
+        }));
     } else if (APP_STATE.activeView === 'waste') {
-        exportData = APP_STATE.filtered.processed.concat(APP_STATE.filtered.raw_fruit);
-    } else if (APP_STATE.activeView === 'repack') {
-        exportData = APP_STATE.filtered.processed;
+        exportData = APP_STATE.filtered.processed.concat(APP_STATE.filtered.raw_fruit).map(x => ({
+            "Toko": x.NAMA_STORE || x.KD_STORE,
+            "Kode Toko": x.KD_STORE,
+            "AM": x.AM,
+            "AC": x.AC,
+            "PLU": x.PLU,
+            "Deskripsi": x.DESCP,
+            "Qty Musnah": getWasteQty(x),
+            "Rp Musnah": getWasteRp(x),
+            "Rp Sales": Number(x.RP_SALES || 0)
+        }));
     } else if (APP_STATE.activeView === 'koreksi') {
-        exportData = APP_STATE.filtered.koreksi;
+        exportData = APP_STATE.filtered.koreksi.map(x => ({
+            "Toko": x.NAMA_STORE,
+            "Kode Toko": x.KD_STORE,
+            "AM": x.AM,
+            "AC": x.AC,
+            "PLU": x.PLU,
+            "Deskripsi": x.DESCP,
+            "Kategori": x.CATEGORY_TYPE,
+            "Qty Koreksi": x.QTY_KOREKSI,
+            "Rp Koreksi": x.RP_KOREKSI
+        }));
     } else if (APP_STATE.activeView === 'discount') {
-        exportData = APP_STATE.filtered.processed.filter(isDiscountFruitItem);
+        const combinedList = APP_STATE.filtered.processed.concat(APP_STATE.filtered.raw_fruit);
+        exportData = combinedList.filter(isDiscountFruitItem).map(x => ({
+            "Toko": x.NAMA_STORE || x.KD_STORE,
+            "Kode Toko": x.KD_STORE,
+            "AM": x.AM,
+            "AC": x.AC,
+            "PLU": x.PLU,
+            "Deskripsi": x.DESCP,
+            "Qty Sales": Number(x.QTY_SALES || 0),
+            "Rp Sales": Number(x.RP_SALES || 0),
+            "Rp Margin": Number(x.RP_MARGIN || 0),
+            "% Margin": Number(x.MARGIN || 0)
+        }));
     }
 
     if (exportData.length === 0) {
-        Swal.fire({ icon: 'info', title: 'Tidak Ada Data', text: 'Tidak ada data yang dapat diexport.' });
+        Swal.fire({ icon: 'info', title: 'Data Kosong', text: 'Tidak ada data untuk diexport.' });
         return;
     }
 
@@ -2476,8 +2612,8 @@ window.exportToExcel = function() {
 
 document.addEventListener('DOMContentLoaded', () => {
     applyDarkModeUI();
-    initCloudSync();
     loadInstantLocalCache();
+    initCloudSync();
     fetchData(false, true);
 });
 
